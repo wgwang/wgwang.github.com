@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>WoW - World of Wgwang - mongodb</title>
+    <title>WoW - World of Wgwang - mongodb的一些tips</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -64,10 +64,37 @@ WoW - The World of Wgwang!
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="mongodb">
-<h1>mongodb<a class="headerlink" href="#mongodb" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="mongodbtips">
-<h2><a class="reference internal" href="tips.html"><em>mongodb的一些tips</em></a><a class="headerlink" href="#mongodbtips" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="mongodbtips">
+<h1>mongodb的一些tips<a class="headerlink" href="#mongodbtips" title="Permalink to this headline">¶</a></h1>
+<p>本文是在使用mongodb的过程中积累的一些tips，经验来源与linux 64bit的mongodb，如无特殊说明，则表明这些经验都是在这个环境下的，不保证在其他操作系统或者32bit的mongodb也适用。</p>
+<p>另外，可能不同版本也会有不同的情况，下面列出各自版本的使用经验，如无特殊说明，没有测试过更多的版本.</p>
+<div class="section" id="id1">
+<h2>版本: 1.8.2/1.8.3<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">修改配置</p>
+<p>mongodb的配置修改，经常需要保证mongodb的集群或者replset的所有机器都能够正常提供服务，否则可能导致配置失败。如果遇到修改配置(如增加机器，删除机器，addshard等操作)，出现错误时，可以确认两方面： 一是所涉及的mongodb的ip和端口是否有手误输入错误的；另一个是所涉及的mongodb是否能够正常提供服务（比如连接池满了会导致无法连接）。</p>
+<p><a class="reference internal" href="conf_err_list.html"><em>相关错误列表</em></a></p>
+</li>
+<li><p class="first">连接数太多</p>
+<p>如果在日志中遇到类似如下的错误信息：</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;too many open files&quot;</span>
+<span class="s">&quot;too many open connections&quot;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><p>则说明打开的连接数太多了，有两个限制mongod/mongos连接数的地方：</p>
+<blockquote>
+<div><ul>
+<li><p class="first">操作系统的ulimit限制，可以用ulimit查看open files，是否足够大。linux下默认的open files是1024，在提供服务的时候往往太小。</p>
+</li>
+<li><p class="first">mongodb自身的限制</p>
+<p>mongodb（mongod/mongos）在启动的时候，有个参数是&#8211;maxConns，用来指定最大的连接数，默认是20000，也是mongod支持的上限（硬编码，无法修改）。如果达到2万，则说明需要优化mongodb的数据/索引，或者需要扩展db以支持更大的并发数；如果是在参数限制小于2万而出现这个错误，则只需要调整参数即可。</p>
+</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
 </div>
 </div>
 
@@ -111,8 +138,8 @@ WoW - The World of Wgwang!
 
   <h3><a href="../../index.html">索引</a></h3>
   <ul>
-<li><a class="reference internal" href="#">mongodb</a><ul>
-<li><a class="reference internal" href="#mongodbtips"><tt class="docutils literal"><span class="pre">mongodb的一些tips</span></tt></a></li>
+<li><a class="reference internal" href="#">mongodb的一些tips</a><ul>
+<li><a class="reference internal" href="#id1">版本: 1.8.2/1.8.3</a></li>
 </ul>
 </li>
 </ul>
