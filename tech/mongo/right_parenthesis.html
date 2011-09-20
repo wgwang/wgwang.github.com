@@ -22,7 +22,10 @@
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <script type="text/javascript" src="/usr/share/jsmath/"></script>
-    <link rel="top" title="WoW -- World of Wgwang v1 documentation" href="../../index.html" /> 
+    <link rel="top" title="WoW" href="../../index.html" />
+    <link rel="up" title="mongodb" href="main.html" />
+    <link rel="next" title="旅行: 万里路上的喜怒哀乐" href="../../travel/index.html" />
+    <link rel="prev" title="mongodb的一些tips" href="tips.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,7 +40,8 @@
             <input type="hidden" name="area" value="default" />
           </form>
         </div>
-        <script type="text/javascript">$('#searchbox').show(0);</script></li>
+        <script type="text/javascript">$('#searchbox').show(0);</script>
+        </li>
         
         <li><a href="../../index.html"> WoW首页  </a> </li>
         <li class="relatedmenudiv"></li>
@@ -65,14 +69,30 @@ WoW - The World of Wgwang!
           <div class="body">
             
   <div class="section" id="id1">
-<h1>一个右括号引发的血案<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
-<p>2011-09-20</p>
-<div class="section" id="id2">
-<h2>起： 缘由<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h1><a class="toc-backref" href="#id2">一个右括号引发的血案</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>2011-09-20 盛大搜索院</p>
+<div class="contents topic" id="id2">
+<p class="topic-title first">索引</p>
+<ul class="simple">
+<li><a class="reference internal" href="#id1" id="id13">一个右括号引发的血案</a><ul>
+<li><a class="reference internal" href="#id3" id="id14">起： 缘由</a></li>
+<li><a class="reference internal" href="#id5" id="id15">承：发现问题所在点</a></li>
+<li><a class="reference internal" href="#id6" id="id16">转：解决问题</a></li>
+<li><a class="reference internal" href="#id7" id="id17">合：经验</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="id3">
+<h2><a class="toc-backref" href="#id2">起： 缘由</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://my.ku6.com">新酷6社区</a>(目前局部地区开放测试中)项目中使用mongodb作为视频数据的存储，昨天（2011-09-19）早上上班就被告知有个问题需要跟进：部分用户进入“我的关注”页面，页面加载十分慢，并且还会出现504错误（关于http的504错误，见<a class="reference external" href="http://tools.ietf.org/html/rfc2616">rfc2616</a>）。</p>
 </div>
-<div class="section" id="id4">
-<h2>承：发现问题所在点<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h2><a class="toc-backref" href="#id2">承：发现问题所在点</a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <p>于是乎，连接酷6 vpn，进入开发调试环境，用发现问题的帐号登录新酷6社区，很容易复现问题。然后查看ganglia监控，未发现太大的异常。根据以往经验，硬盘使用率100%之后会导致各种诡异问题出现，df查看了下硬盘使用情况，正常。另外，查看了网络相关日志，没发现问题。于是先<em>暂时</em>（但并非完全排除）排除了系统原因。</p>
 <p>用mongo客户端登录db，查找到该用户id所对应的数据情况，发现了另外一个问题，报给相关同事，不提，继续跟进<strong>慢</strong>的问题。找出跟用户“我的关注”所有相关的数据，没发现有有数据异常。连同ganglia的监控情况，<em>暂时</em>排除掉mongodb自身的波动原因。</p>
 <p>跟进调用mongodb的php代码，找到获取相关数据的函数，逐行分析，未发现异常。在php中增加代码打印跟mongo相关的代码的执行执行时间。经排查、检验和测试，找到慢的语句块。分析该语句块，未发现问题。于是怀疑参数中有异常的数据。</p>
@@ -90,8 +110,8 @@ $cur = $db -&gt; video
   -&gt; limit(30);</pre>
 </div>
 </div>
-<div class="section" id="id5">
-<h2>转：解决问题<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id6">
+<h2><a class="toc-backref" href="#id2">转：解决问题</a><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <p>定位了问题所在，就好解决了，但看了代码，服务器相关的日志，没发现问题。于是，迂回的从另一个角度上先把该问题解决掉，如下：</p>
 <blockquote>
 <div><ul class="simple">
@@ -185,8 +205,8 @@ echo "time consume: ". ($end - $beg) . "\n";</pre>
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="id6">
-<h2>合：经验<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2><a class="toc-backref" href="#id2">合：经验</a><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <p>上述是一个经历，经验谈不上，有想法的，欢迎<a class="reference external" href="mailto:wgwang&#37;&#52;&#48;live&#46;com">与我联系</a>，共同探讨技术以及非技术问题。下面是这个几乎花费了我一天的问题的感想。</p>
 <ul class="simple">
 <li>传说中的细节决定成败，微小的地方最容易忽视。所谓，千里之堤，溃于蚁穴。</li>
@@ -209,6 +229,35 @@ echo "time consume: ". ($end - $beg) . "\n";</pre>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+
+<div class="hierarhy">
+  <h3>导航</h3>
+  <ul>
+    <li><a href="../../index.html">WoW</a></li>
+
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="main.html" accesskey="U">mongodb</a></li> 
+  </ul>
+</div>
+
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">一个右括号引发的血案</a><ul>
+<li><a class="reference internal" href="#id3">起： 缘由</a></li>
+<li><a class="reference internal" href="#id5">承：发现问题所在点</a></li>
+<li><a class="reference internal" href="#id6">转：解决问题</a></li>
+<li><a class="reference internal" href="#id7">合：经验</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>上一篇</h3>
+  <p class="topless"><a href="tips.html"
+                        title="previous chapter">mongodb的一些tips</a></p>
+  <h3>下一篇</h3>
+  <p class="topless"><a href="../../travel/index.html"
+                        title="next chapter">旅行: 万里路上的喜怒哀乐</a></p>
 
 <div id="aboutme" >
   <h3>About me</h3>
@@ -240,17 +289,6 @@ echo "time consume: ". ($end - $beg) . "\n";</pre>
     
     </p>
 </div>
-
-  <h3><a href="../../index.html">索引</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">一个右括号引发的血案</a><ul>
-<li><a class="reference internal" href="#id2">起： 缘由</a></li>
-<li><a class="reference internal" href="#id4">承：发现问题所在点</a></li>
-<li><a class="reference internal" href="#id5">转：解决问题</a></li>
-<li><a class="reference internal" href="#id6">合：经验</a></li>
-</ul>
-</li>
-</ul>
 
 <div id="searchbox" style="display: none">
   <h3>快速查找</h3>
