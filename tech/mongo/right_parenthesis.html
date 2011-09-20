@@ -1,0 +1,279 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WoW - World of Wgwang - 一个右括号引发的血案</title>
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="/usr/share/jsmath/"></script>
+    <link rel="top" title="WoW -- World of Wgwang v1 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+        <div id="searchbox">
+          <form class="search" action="../../search.html" method="get">
+            <input type="text" name="q" size="18" />
+            <input type="submit" value="搜索" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+        </div>
+        <script type="text/javascript">$('#searchbox').show(0);</script></li>
+        
+        <li><a href="../../index.html"> WoW首页  </a> </li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../tech/index.html">技 术</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../travel/index.html">旅 行</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../note/index.html">随 笔</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../mm/index.html">影 音</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../poem/index.html">诗 词</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../work/index.html">工 作</a></li>
+      </ul>
+    </div>
+
+<div class="fixbodyheader">
+WoW - The World of Wgwang!
+</div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="id1">
+<h1>一个右括号引发的血案<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>2011-09-20</p>
+<div class="section" id="id2">
+<h2>起： 缘由<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://my.ku6.com">新酷6社区</a>(目前局部地区开放测试中)项目中使用mongodb作为视频数据的存储，昨天（2011-09-19）早上上班就被告知有个问题需要跟进：部分用户进入“我的关注”页面，页面加载十分慢，并且还会出现504错误（关于http的504错误，见<a class="reference external" href="http://tools.ietf.org/html/rfc2616">rfc2616</a>）。</p>
+</div>
+<div class="section" id="id4">
+<h2>承：发现问题所在点<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>于是乎，连接酷6 vpn，进入开发调试环境，用发现问题的帐号登录新酷6社区，很容易复现问题。然后查看ganglia监控，未发现太大的异常。根据以往经验，硬盘使用率100%之后会导致各种诡异问题出现，df查看了下硬盘使用情况，正常。另外，查看了网络相关日志，没发现问题。于是先<em>暂时</em>（但并非完全排除）排除了系统原因。</p>
+<p>用mongo客户端登录db，查找到该用户id所对应的数据情况，发现了另外一个问题，报给相关同事，不提，继续跟进<strong>慢</strong>的问题。找出跟用户“我的关注”所有相关的数据，没发现有有数据异常。连同ganglia的监控情况，<em>暂时</em>排除掉mongodb自身的波动原因。</p>
+<p>跟进调用mongodb的php代码，找到获取相关数据的函数，逐行分析，未发现异常。在php中增加代码打印跟mongo相关的代码的执行执行时间。经排查、检验和测试，找到慢的语句块。分析该语句块，未发现问题。于是怀疑参数中有异常的数据。</p>
+<p>从相关模块找到所有的输入参数，最终确定了导致数据执行很慢的语句，该语句实现的功能为：<em>查询/登录用户所关注的所有用户/在过去一段时间内新上传的视频</em>。同时找到引起慢的问题的条件，如下：</p>
+<blockquote>
+<div><strong>登录用户不关注任何用户的时候，去查看我的关注</strong></div></blockquote>
+<p>验证上述结论，用其一个新的帐号登录并查看我的关注页面，复现。于是确认了问题所在：</p>
+<blockquote>
+<div><strong>当一个登录用户不关注任何用户的时候，查看“我的关注”页面，会导致页面加载很慢，从而出现504错误。</strong>这个错误反应在代码上，表现为<strong>查找最近一段时间内所有用户新上传的视频，并返回这些视频最新的30个id</strong>。</div></blockquote>
+<p>相关的出现bug的代码(出现bug的代码)经修改整合如下：</p>
+<div class="highlight-python"><pre>$t = new MongoInt64("1308624131731");
+$cur = $db -&gt; video
+  -&gt; find(array( "uploadtime" =&gt; array('$gt' =&gt; $t ), array("_id" =&gt; 1)))
+  -&gt; sort(array("uploadtime" =&gt; -1))
+  -&gt; limit(30);</pre>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>转：解决问题<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>定位了问题所在，就好解决了，但看了代码，服务器相关的日志，没发现问题。于是，迂回的从另一个角度上先把该问题解决掉，如下：</p>
+<blockquote>
+<div><ul class="simple">
+<li>逻辑上，如果一个用户没有关注任何用户，查看我的关注页面是可以返回空的。</li>
+<li>经与各方确认，可以按照上述方法修改代码。</li>
+<li>前端修改php代码，更新到线上，问题<em>算是</em>解决。</li>
+</ul>
+</div></blockquote>
+<p>显然，上述办法并未<strong>真正的</strong>解决问题，而这个问题也涉及到mongodb是否能够经得住考验。在一个推荐系统的讨论和一个搜索系统的会议之后，继续跟进这个问题。</p>
+<p>这一次，写了一个python脚本实现了与有bug的php代码相同的功能，并把该段php代码给抽取出来，单独测试。两个对比的核心代码（省略了一些初始化等代码）如下：</p>
+<p>php:</p>
+<div class="highlight-python"><pre>$beg = microtime(true);
+
+$t = new MongoInt64("1308624131731");
+$cur = $db -&gt; video
+  -&gt;find(array( "uploadtime" =&gt; array('$gt' =&gt; $t), array("_id" =&gt; 1)))
+  -&gt; sort(array("uploadtime" =&gt; -1))
+  -&gt; limit(30);
+$res = iterator_to_array( $cur);
+var_dump ($res);
+
+$end = microtime(true);
+echo "time consume: ". ($end - $beg) . "\n";</pre>
+</div>
+<p>python:</p>
+<div class="highlight-python"><pre>beg = time.time()
+cur = db.video.find({'uploadtime':{'$gt':1316424665941}}, fields=['_id', ])
+    .sort( [ ('uploadtime', pymongo.DESCENDING), ] )
+    .limit(30)
+res = list(cur)
+print res
+end = time.time()
+print 'time consume: ', end-beg</pre>
+</div>
+<p>执行上述脚本发现，python脚本在100ms之内得到结果，而php脚本则要20s以上。于是开始怀疑两点：</p>
+<blockquote>
+<div><ul class="simple">
+<li>没有正确使用php mongo</li>
+<li>php mongo存在bug</li>
+</ul>
+</div></blockquote>
+<p>前一个的概率较大，优先考虑。到<a class="reference external" href="http://php.net/manual/en/book.mongo.php">phpMongo</a>上仔细阅读了所有相关的文档，没有发现使用上的异常。在确认了对uploadtime已建立索引，同时调用hint指定索引，问题并没有解决。调用explain，php cursor抛出超时的异常。到此，感觉可能是php mongo自身的bug。</p>
+<p>为了确认是否是自身的bug，输入的时间改为当前时间减1000秒，用py脚本测试返回的结果个数只有几十个。然后改用php脚本测试，发现耗时大大缩短，同时输出的结果是空。</p>
+<p>到此，发现这段代码的现象跟/在没有建索引时的查询/有点相似，几经检查没发现索引相关的问题，且python代码出现异常，对索引问题几乎可以排除。到此，问题几乎集中在php mongo以及对php mongo的使用上，mongodb服务器端的问题基本排除。</p>
+<p>为了简化语句，逐步分析，重新写了两个脚本（<strong>重新</strong>，而不是复制原来的脚本），来比较简化版的查询。脚本如下：</p>
+<p>php:</p>
+<div class="highlight-python"><pre>echo $db-&gt;video
+  -&gt;find(array( "uploadtime" =&gt; array('$gt' =&gt; $t )))
+  -&gt;count();</pre>
+</div>
+<p>python:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">db</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;uploadtime&#39;</span><span class="p">:{</span><span class="s">&#39;$gt&#39;</span><span class="p">:</span><span class="mi">1316424665941</span><span class="p">}})</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>比较上述两个语句的耗时，发现耗时相当。逐步扩充，最终达到实现跟最初的语句功能一样的脚本，如下：</p>
+<p>php:</p>
+<div class="highlight-python"><pre>$t = new MongoInt64("1308624131731");
+$cur = $db -&gt; video
+  -&gt;find(array( "uploadtime" =&gt; array('$gt' =&gt; $t )), array("_id" =&gt; 1))
+  -&gt; sort(array("uploadtime" =&gt; -1))
+  -&gt; limit(30);
+$res = iterator_to_array( $cur);</pre>
+</div>
+<p>python:</p>
+<div class="highlight-python"><pre>cur = db.video.find({'uploadtime':{'$gt':1316424665941}}, fields=['_id', ])
+    .sort( [ ('uploadtime', pymongo.DESCENDING), ] )
+    .limit(30)
+res = list(cur)</pre>
+</div>
+<p>奇异的发现，两个代码运行时间几乎相等。比较了上述php代码和原始的php代码，终于发现，引发bug的，只是一个<strong>右括号）</strong>位置错误导致的。修改了括号的位置，得到正确的php代码为:</p>
+<div class="highlight-python"><pre>$beg = microtime(true);
+
+$t = new MongoInt64("1308624131731");
+$cur = $db -&gt; video
+  -&gt;find(array( "uploadtime" =&gt; array('$gt' =&gt; $t )), array("_id" =&gt; 1))
+  -&gt; sort(array("uploadtime" =&gt; -1))
+  -&gt; limit(30);
+$res = iterator_to_array( $cur);
+var_dump ($res);
+
+$end = microtime(true);
+echo "time consume: ". ($end - $beg) . "\n";</pre>
+</div>
+<p>对上述代码仔细测试了n遍，正常。到此，问题<strong>彻底解决</strong>，解释如下：</p>
+<blockquote>
+<div><ul class="simple">
+<li>预期中：query是<strong>&#8220;uploadtime&#8221; =&gt; array(&#8216;$gt&#8217; =&gt; $t)</strong>，且只返回“_id” 字段</li>
+<li>代码中的实现是：query是<strong>&#8220;uploadtime&#8221; =&gt; array(&#8216;$gt&#8217; =&gt; $t), array(&#8220;_id&#8221; =&gt; 1)</strong>，同时返回所有字段。</li>
+<li>mongodb没有对uploadtime和_id建立联合索引，导致后者在数据量大的时候会出现很慢的情况。</li>
+<li>另外，括号位置的变化，没有导致语法错误，却导致了逻辑错误。</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="id6">
+<h2>合：经验<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<p>上述是一个经历，经验谈不上，有想法的，欢迎<a class="reference external" href="mailto:wgwang&#37;&#52;&#48;live&#46;com">与我联系</a>，共同探讨技术以及非技术问题。下面是这个几乎花费了我一天的问题的感想。</p>
+<ul class="simple">
+<li>传说中的细节决定成败，微小的地方最容易忽视。所谓，千里之堤，溃于蚁穴。</li>
+<li>眼神要好点，看代码看了几次都没发现。题外话：神码眼神啊！</li>
+<li>想起了《<a class="reference external" href="http://blog.regehr.org/archives/574">C No Evil</a>》的讨论，经过这次发现，难以被发现的问题是，往往是在一个很细微的地方做一个逻辑上的小修改（物理上称<em>微扰</em>），而且修改后在各方面上都是对的。</li>
+<li>这个项目是在时间很紧且没有测试团队的情况下做的。在时间紧，任务重的情况下，如何保证代码质量？</li>
+<li>另外一个，这个代码不是我写的，同时对php也不是很熟悉。这种时候来跟进bug，有哪些方法可以更快的发现问题和解决问题？</li>
+<li>到目前为止，mongodb还是值得信赖的。</li>
+<li>随着对mongodb了解的更加深入，后续知道在什么地方适合mongodb，同时怎样在写程序时避免由于误用而导致的问题。</li>
+<li>后续会去更加深入的学习mongodb的设计、编码，做到知其然，同时知其所以然。</li>
+</ul>
+<p>联系我： <a class="reference external" href="mailto:wgwang&#37;&#52;&#48;live&#46;com">邮件</a> <a class="reference external" href="http://weibo.com/wenguangwang">新浪微博</a> <a class="reference external" href="http://t.qq.com/wgwang">腾讯微博</a> <a class="reference external" href="http://twitter.com/wgwang">twitter</a></p>
+<p>版权所有，转载请注明<a class="reference external" href="http://wgwang.github.com">来源</a>: <a class="reference external" href="http://wgwang.github.com">http://wgwang.github.com</a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+<div id="aboutme" >
+  <h3>About me</h3>
+    <p class="aboutme" style="font-size: 14px">
+    
+    爱旅行，爱摄影，<br/>
+    也爱美食。<br/>
+    喜欢喝茶，<br/>
+    也喜欢有事没事独自发呆。<br/>
+    追寻万卷书中的深邃，<br/>
+    觅览万里路上的悠然，<br/>
+    也用文字记录生活的点点滴滴。<br/>
+    在行走与驻足之间，<br/>
+    我和你一样，<br/>
+    我是wgwang，<br/>
+    漂泊于美和丑的人间。<br/>
+    <br/>
+    爱搜索，爱开源，<br/>
+    爱各种新与旧技术, <br/>
+    更爱在自由的疆域驰骋。<br/>
+    享受Python的固执，<br/>
+    追逐C++的放任，<br/>
+    在充满是非的互联网里，<br/>
+    围观墙里墙外的折腾。<br/>
+    向往geek的执着，<br/>
+    我和你一样也不一样，<br/>
+    我是wgwang，<br/>
+    在平行宇宙中迷恋真实与虚幻。<br/>
+    
+    </p>
+</div>
+
+  <h3><a href="../../index.html">索引</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">一个右括号引发的血案</a><ul>
+<li><a class="reference internal" href="#id2">起： 缘由</a></li>
+<li><a class="reference internal" href="#id4">承：发现问题所在点</a></li>
+<li><a class="reference internal" href="#id5">转：解决问题</a></li>
+<li><a class="reference internal" href="#id6">合：经验</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>快速查找</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+
+    <div class="footer">
+        &copy; Copyright 2011, wgwang.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

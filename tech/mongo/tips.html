@@ -29,8 +29,8 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-        <div id="searchbox_top">
-          <form class="search_top" action="../../search.html" method="get">
+        <div id="searchbox">
+          <form class="search" action="../../search.html" method="get">
             <input type="text" name="q" size="18" />
             <input type="submit" value="搜索" />
             <input type="hidden" name="check_keywords" value="yes" />
@@ -65,26 +65,42 @@ WoW - The World of Wgwang!
           <div class="body">
             
   <div class="section" id="mongodbtips">
-<h1>mongodb的一些tips<a class="headerlink" href="#mongodbtips" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id1">mongodb的一些tips</a><a class="headerlink" href="#mongodbtips" title="Permalink to this headline">¶</a></h1>
 <p>本文是在使用mongodb的过程中积累的一些tips，经验来源与linux 64bit的mongodb，如无特殊说明，则表明这些经验都是在这个环境下的，不保证在其他操作系统或者32bit的mongodb也适用。</p>
 <p>另外，可能不同版本也会有不同的情况，下面列出各自版本的使用经验，如无特殊说明，没有测试过更多的版本.</p>
-<div class="section" id="id1">
-<h2>版本: 1.8.2/1.8.3<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic">
-<li><p class="first">修改配置</p>
-<p>mongodb的配置修改，经常需要保证mongodb的集群或者replset的所有机器都能够正常提供服务，否则可能导致配置失败。如果遇到修改配置(如增加机器，删除机器，addshard等操作)，出现错误时，可以确认两方面： 一是所涉及的mongodb的ip和端口是否有手误输入错误的；另一个是所涉及的mongodb是否能够正常提供服务（比如连接池满了会导致无法连接）。</p>
-<p><a class="reference internal" href="conf_err_list.html"><em>相关错误列表</em></a></p>
+<div class="contents topic" id="id1">
+<p class="topic-title first">索引</p>
+<ul class="simple">
+<li><a class="reference internal" href="#mongodbtips" id="id5">mongodb的一些tips</a><ul>
+<li><a class="reference internal" href="#id2" id="id6">版本: 1.8.2/1.8.3</a><ul>
+<li><a class="reference internal" href="#id3" id="id7">修改配置</a></li>
+<li><a class="reference internal" href="#id4" id="id8">连接数太多</a></li>
+</ul>
 </li>
-<li><p class="first">连接数太多</p>
-<p>如果在日志中遇到类似如下的错误信息：</p>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><a class="toc-backref" href="#id1">版本: 1.8.2/1.8.3</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3><a class="toc-backref" href="#id1">修改配置</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>mongodb的配置修改，经常需要保证mongodb的集群或者replset的所有机器都能够正常提供服务，否则可能导致配置失败。如果遇到修改配置(如增加机器，删除机器，addshard等操作)，出现错误时，可以确认两方面： 一是所涉及的mongodb的ip和端口是否有手误输入错误的；另一个是所涉及的mongodb是否能够正常提供服务（比如连接池满了会导致无法连接）。</p>
+<p><a class="reference internal" href="conf_err_list.html"><em>相关错误列表</em></a></p>
+</div></blockquote>
+</div>
+<div class="section" id="id4">
+<h3><a class="toc-backref" href="#id1">连接数太多</a><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><blockquote>
+<div><p>如果在日志中遇到类似如下的错误信息：</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;too many open files&quot;</span>
 <span class="s">&quot;too many open connections&quot;</span>
 </pre></div>
 </div>
-</li>
-</ol>
-<blockquote>
-<div><p>则说明打开的连接数太多了，有两个限制mongod/mongos连接数的地方：</p>
+</div></blockquote>
+<p>则说明打开的连接数太多了，有两个限制mongod/mongos连接数的地方：</p>
 <blockquote>
 <div><ul>
 <li><p class="first">操作系统的ulimit限制，可以用ulimit查看open files，是否足够大。linux下默认的open files是1024，在提供服务的时候往往太小。</p>
@@ -95,6 +111,7 @@ WoW - The World of Wgwang!
 </ul>
 </div></blockquote>
 </div></blockquote>
+</div>
 </div>
 </div>
 
@@ -139,7 +156,11 @@ WoW - The World of Wgwang!
   <h3><a href="../../index.html">索引</a></h3>
   <ul>
 <li><a class="reference internal" href="#">mongodb的一些tips</a><ul>
-<li><a class="reference internal" href="#id1">版本: 1.8.2/1.8.3</a></li>
+<li><a class="reference internal" href="#id2">版本: 1.8.2/1.8.3</a><ul>
+<li><a class="reference internal" href="#id3">修改配置</a></li>
+<li><a class="reference internal" href="#id4">连接数太多</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
