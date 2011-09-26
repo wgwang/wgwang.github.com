@@ -283,8 +283,12 @@ img {
 }
 
 
-.toctree-wrapper .reference{
+/*
+.toctree-wrapper, .reference{
     font-size: 18px;    
 }
 
-
+.internal, .external{
+    font:14px/1.5 Georgia,Times,Serif;
+}
+*/

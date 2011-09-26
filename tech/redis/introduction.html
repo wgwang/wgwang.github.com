@@ -1,0 +1,716 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WoW - World of Wgwang - redis introduction</title>
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="/usr/share/jsmath/"></script>
+    <link rel="top" title="WoW" href="../../index.html" />
+    <link rel="up" title="redis" href="index.html" />
+    <link rel="next" title="推荐" href="../recommender/index.html" />
+    <link rel="prev" title="redis" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+        <div id="searchbox">
+          <form class="search" action="../../search.html" method="get">
+            <input type="text" name="q" size="18" />
+            <input type="submit" value="搜索" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+        </div>
+        <script type="text/javascript">$('#searchbox').show(0);</script>
+        </li>
+        
+        <li><a href="../../index.html"> WoW首页  </a> </li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../tech/index.html">技 术</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../travel/index.html">旅 行</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../note/index.html">随 笔</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../mm/index.html">影 音</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../poem/index.html">诗 词</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../work/index.html">工 作</a></li>
+      </ul>
+    </div>
+
+<div class="fixbodyheader">
+WoW - The World of Wgwang!
+</div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="redis-introduction">
+<span id="index-0"></span><h1>redis introduction<a class="headerlink" href="#redis-introduction" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="redis">
+<h2>redis介绍<a class="headerlink" href="#redis" title="Permalink to this headline">¶</a></h2>
+<p>redis是一个nosql数据库，它比ttserver（tokyo tyrant）复杂点，比复杂的mongodb和hbase简单点，其数据结构介于tt和mongodb之间，性能上十分优异，几乎在各种评测中都独占鳌头。</p>
+</div>
+<div class="section" id="redis-keys">
+<h2>redis keys<a class="headerlink" href="#redis-keys" title="Permalink to this headline">¶</a></h2>
+<p>redis的key是字符串，但最好不要包括空白字符（如空格，换行等）。</p>
+<p>下面是key的一些建议：</p>
+<ul class="simple">
+<li>不要太长，如几百个字符的句子等。</li>
+<li>不要太短，太短的问题在于可阅读性差，同时节省的空间有限。一句话，当硬盘和内存都是白菜价时，节省一点点的空间导致晦涩难懂是不值得的。就像，买白菜是为了节省一元钱却要花费两个小时都到很远的另外一个菜市场是不合算的。</li>
+<li>可以用逗号“,”或者冒号“:”分割key中的不同字段。例如，ireader的一个场景是要“tag”+“user”作为key，这样为了key可以设置为“user:tag1,tag2”等。</li>
+</ul>
+</div>
+<div class="section" id="redis-date-type">
+<h2>redis date type<a class="headerlink" href="#redis-date-type" title="Permalink to this headline">¶</a></h2>
+<p>redis的value，可以如下几种：</p>
+<ul class="simple">
+<li><a class="reference internal" href="#string">string</a>，</li>
+<li><a class="reference internal" href="#list">list</a>，</li>
+<li><a class="reference internal" href="#set">set</a>，</li>
+<li><a class="reference internal" href="#sorted-set">sorted set</a>，</li>
+<li><a class="reference internal" href="#hash">hash</a>。</li>
+</ul>
+<p>如果将redis当作key-value来看待，下面的类型是指redis的value所支持的类型。另外，下面描述的各种类型中，除了string之外，其他的类型，如list/set等，其内部支持的数据类型也是string，如set的member，hash的field和value等。</p>
+<div class="section" id="string">
+<h3>string<a class="headerlink" href="#string" title="Permalink to this headline">¶</a></h3>
+<p>redis的string类型是广义的，可以存储普通的字符串，以及二进制文件。同时还支持数字格式的加减运算等。如果将redis只用作这个类型，有点像带有持久化的memcached，或者跟tt server相似。</p>
+<p>redis的string类型支持如下命令，官方文档见：<a class="reference external" href="http://redis.io/commands#string">http://redis.io/commands#string</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="17%" />
+<col width="73%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>命令</td>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr><td>APPEND</td>
+<td>key value</td>
+<td>Append a value to a key</td>
+</tr>
+<tr><td>DECR</td>
+<td>key</td>
+<td>Decrement the integer value of a key by one</td>
+</tr>
+<tr><td>DECRBY</td>
+<td>key decrement</td>
+<td>Decrement the integer value of a key by the given number</td>
+</tr>
+<tr><td>GET</td>
+<td>key</td>
+<td>Get the value of a key</td>
+</tr>
+<tr><td>GETBIT</td>
+<td>key offset</td>
+<td>Returns the bit value at offset in the string value stored at key</td>
+</tr>
+<tr><td>GETRANGE</td>
+<td>key start end</td>
+<td>Get a substring of the string stored at a key</td>
+</tr>
+<tr><td>GETSET</td>
+<td>key value</td>
+<td>Set the string value of a key and return its old value</td>
+</tr>
+<tr><td>INCR</td>
+<td>key</td>
+<td>Increment the integer value of a key by one</td>
+</tr>
+<tr><td>INCRBY</td>
+<td>key increment</td>
+<td>Increment the integer value of a key by the given number</td>
+</tr>
+<tr><td>MGET</td>
+<td>key [key ...]</td>
+<td>Get the values of all the given keys</td>
+</tr>
+<tr><td>MSET</td>
+<td>key value [k-v...]</td>
+<td>Set multiple keys to multiple values</td>
+</tr>
+<tr><td>MSETNX</td>
+<td>key value [k-v...]</td>
+<td>Set multiple keys to multiple values, only if none of the keys exist</td>
+</tr>
+<tr><td>SET</td>
+<td>key value</td>
+<td>Set the string value of a key</td>
+</tr>
+<tr><td>SETBIT</td>
+<td>key offset value</td>
+<td>Sets or clears the bit at offset in the string value stored at key</td>
+</tr>
+<tr><td>SETEX</td>
+<td>key seconds value</td>
+<td>Set the value and expiration of a key</td>
+</tr>
+<tr><td>SETNX</td>
+<td>key value</td>
+<td>Set the value of a key, only if the key does not exist</td>
+</tr>
+<tr><td>SETRANGE</td>
+<td>key offset value</td>
+<td>Overwrite part of a string at key starting at the specified offset</td>
+</tr>
+<tr><td>STRLEN</td>
+<td>key</td>
+<td>Get the length of the value stored in a key</td>
+</tr>
+</tbody>
+</table>
+<p>下面是用redis-py写的一个例子:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># string</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> * </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;insert [</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">] into redis fail&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+<span class="k">print</span> <span class="s">&#39;string: &#39;</span>
+<span class="n">key</span> <span class="o">=</span> <span class="s">&#39;3 * 3&#39;</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;=&#39;</span><span class="p">,</span> <span class="n">value</span>
+<span class="k">print</span> <span class="s">&#39;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="list">
+<h3>list<a class="headerlink" href="#list" title="Permalink to this headline">¶</a></h3>
+<p>redis list在逻辑上类似于python的list，在实现上用的是链表，它支持头尾插入（LPUSH和RPUSH）并保持插入的顺序。另外，redis实现了从list中快速获取一个范围的数据（LRANGE）。</p>
+<p>redis的每个元素是string。</p>
+<p>下面是redis list相关的命令，官方文档见：<a class="reference external" href="http://redis.io/commands#list">http://redis.io/commands#list</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="18%" />
+<col width="74%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>命令</td>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr><td>BLPOP</td>
+<td>key [k...] timeout</td>
+<td>Remove and get the first element in a list, or block until one is available</td>
+</tr>
+<tr><td>BRPOP</td>
+<td>key [k...] timeout</td>
+<td>Remove and get the last element in a list, or block until one is available</td>
+</tr>
+<tr><td>BRPOPLPUSH</td>
+<td>src dst timeout</td>
+<td>Pop a value from a list, push it to another list and return it; or block until one is available</td>
+</tr>
+<tr><td>LINDEX</td>
+<td>key index</td>
+<td>Get an element from a list by its index</td>
+</tr>
+<tr><td>LINSERT</td>
+<td>key</td>
+<td>BEFORE|AFTER pivot value Insert an element before or after another element in a list</td>
+</tr>
+<tr><td>LLEN</td>
+<td>key</td>
+<td>Get the length of a list</td>
+</tr>
+<tr><td>LPOP</td>
+<td>key</td>
+<td>Remove and get the first element in a list</td>
+</tr>
+<tr><td>LPUSH</td>
+<td>key value [v...]</td>
+<td>Prepend one or multiple values to a list</td>
+</tr>
+<tr><td>LPUSHX</td>
+<td>key value</td>
+<td>Prepend a value to a list, only if the list exists</td>
+</tr>
+<tr><td>LRANGE</td>
+<td>key start stop</td>
+<td>Get a range of elements from a list</td>
+</tr>
+<tr><td>LREM</td>
+<td>key count value</td>
+<td>Remove elements from a list</td>
+</tr>
+<tr><td>LSET</td>
+<td>key index value</td>
+<td>Set the value of an element in a list by its index</td>
+</tr>
+<tr><td>LTRIM</td>
+<td>key start stop</td>
+<td>Trim a list to the specified range</td>
+</tr>
+<tr><td>RPOP</td>
+<td>key</td>
+<td>Remove and get the last element in a list</td>
+</tr>
+<tr><td>RPOPLPUSH</td>
+<td>source destination</td>
+<td>Remove the last element in a list, append it to another list and return it</td>
+</tr>
+<tr><td>RPUSH</td>
+<td>key value [value ...]</td>
+<td>Append one or multiple values to a list</td>
+</tr>
+<tr><td>RPUSHX</td>
+<td>key value</td>
+<td>Append a value to a list, only if the list exists</td>
+</tr>
+</tbody>
+</table>
+<p>redis-py的示例:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># list</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">j</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">rpush</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;rpush fail&#39;</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="s">&#39;list: &#39;</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="n">sizekey</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">llen</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">lrange</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sizekey</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;: &#39;</span><span class="p">,</span> <span class="n">sizekey</span><span class="p">,</span> <span class="n">ct</span>
+<span class="k">print</span> <span class="s">&#39;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="set">
+<h3>set<a class="headerlink" href="#set" title="Permalink to this headline">¶</a></h3>
+<p>redis set逻辑上类似于python的set。其内每条数据是不重复，且无序的。同时，redis的set支持求交/并运算。</p>
+<p>set支持的命令如下，官方文档见：<a class="reference external" href="http://redis.io/commands#set">http://redis.io/commands#set</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="17%" />
+<col width="73%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>命令</td>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr><td>SADD</td>
+<td>key member [member...]</td>
+<td>Add one or more members to a set</td>
+</tr>
+<tr><td>SCARD</td>
+<td>key</td>
+<td>Get the number of members in a set</td>
+</tr>
+<tr><td>SDIFF</td>
+<td>key [key ...]</td>
+<td>Subtract multiple sets</td>
+</tr>
+<tr><td>SDIFFSTORE</td>
+<td>dst key [key ...]</td>
+<td>Subtract multiple sets and store the resulting set in a key</td>
+</tr>
+<tr><td>SINTER</td>
+<td>key [key ...]</td>
+<td>Intersect multiple sets</td>
+</tr>
+<tr><td>SINTERSTORE</td>
+<td>dst key [key ...]</td>
+<td>Intersect multiple sets and store the resulting set in a key</td>
+</tr>
+<tr><td>SISMEMBER</td>
+<td>key member</td>
+<td>Determine if a given value is a member of a set</td>
+</tr>
+<tr><td>SMEMBERS</td>
+<td>key</td>
+<td>Get all the members in a set</td>
+</tr>
+<tr><td>SMOVE</td>
+<td>source dst member</td>
+<td>Move a member from one set to another</td>
+</tr>
+<tr><td>SPOP</td>
+<td>key</td>
+<td>Remove and return a random member from a set</td>
+</tr>
+<tr><td>SRANDMEMBER</td>
+<td>key</td>
+<td>Get a random member from a set</td>
+</tr>
+<tr><td>SREM</td>
+<td>key member [member...]</td>
+<td>Remove one or more members from a set</td>
+</tr>
+<tr><td>SUNION</td>
+<td>key [key ...]</td>
+<td>Add multiple sets</td>
+</tr>
+<tr><td>SUNIONSTORE</td>
+<td>dst key [key ...]</td>
+<td>Add multiple sets and store the resulting set in a key</td>
+</tr>
+</tbody>
+</table>
+<p>redis-py的一个例子:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># set</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;set </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">i</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">j</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">sismember</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">sadd</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;add member to set fail&#39;</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="s">&#39;set: &#39;</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;set </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">i</span>
+    <span class="n">sizekey</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">scard</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">smembers</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;: &#39;</span><span class="p">,</span>  <span class="n">sizekey</span><span class="p">,</span> <span class="n">ct</span>
+<span class="k">print</span> <span class="s">&#39;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sorted-set">
+<h3>sorted set<a class="headerlink" href="#sorted-set" title="Permalink to this headline">¶</a></h3>
+<p>redis sorted set是在set的基础上，对每个元素增加一个关联的score，redis会根据score排序，并提供命令获得排序后的结果。</p>
+<p>sorted set和set不同应用场景，一个简单的例子是，统计搜索中的query的情况，分别有如下两种需求：</p>
+<ul>
+<li><p class="first">query列表</p>
+<blockquote>
+<div><p>用set保存搜索的query，其输出结果就是一个不重复的query列表。</p>
+</div></blockquote>
+</li>
+<li><p class="first">热门query</p>
+<blockquote>
+<div><p>用sorted set保存搜索的query，同时score是该query的搜索次数，其输出结果根据score降序排序，得到的就是按照热门程度排序的query列表。</p>
+</div></blockquote>
+</li>
+</ul>
+<p>sorted set支持如下命令，官方文档见：<a class="reference external" href="http://redis.io/commands#sorted_set">http://redis.io/commands#sorted_set</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="21%" />
+<col width="66%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>命令</td>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr><td>ZADD</td>
+<td>key score member [s-m...]</td>
+<td>Add one or more members to a sorted set, or update its score if it already exists</td>
+</tr>
+<tr><td>ZCARD</td>
+<td>key</td>
+<td>Get the number of members in a sorted set</td>
+</tr>
+<tr><td>ZCOUNT</td>
+<td>key min max</td>
+<td>Count the members in a sorted set with scores within the given values</td>
+</tr>
+<tr><td>ZINCRBY</td>
+<td>key increment member</td>
+<td>Increment the score of a member in a sorted set</td>
+</tr>
+<tr><td>ZINTERSTORE</td>
+<td>dst numkeys key [k...]
+[WEIGHTS weight [w...]]
+[AGGREGATE SUM|MIN|MAX]</td>
+<td>Intersect multiple sorted sets and store the resulting sorted set in a new key</td>
+</tr>
+<tr><td>ZRANGE</td>
+<td>key start stop
+[WITHSCORES]</td>
+<td>Return a range of members in a sorted set, by index</td>
+</tr>
+<tr><td>ZRANGEBYSCORE</td>
+<td>key min max [WITHSCORES]
+[LIMIT offset count]</td>
+<td>Return a range of members in a sorted set, by score</td>
+</tr>
+<tr><td>ZRANK</td>
+<td>key member</td>
+<td>Determine the index of a member in a sorted set</td>
+</tr>
+<tr><td>ZREM</td>
+<td>key member [member ...]</td>
+<td>Remove one or more members from a sorted set</td>
+</tr>
+<tr><td>ZREMRANGEBYRANK</td>
+<td>key start stop</td>
+<td>Remove all members in a sorted set within the given indexes</td>
+</tr>
+<tr><td>ZREMRANGEBYSCORE</td>
+<td>key min max</td>
+<td>Remove all members in a sorted set within the given scores</td>
+</tr>
+<tr><td>ZREVRANGE</td>
+<td>key start stop [WITHSCORES]</td>
+<td>Return a range of members in a sorted set, by index, with scores ordered from high to low</td>
+</tr>
+<tr><td>ZREVRANGEBYSCORE</td>
+<td>key max min [WITHSCORES]
+[LIMIT offset count]</td>
+<td>Return a range of members in a sorted set, by score, with scores ordered from high to low</td>
+</tr>
+<tr><td>ZREVRANK</td>
+<td>key member</td>
+<td>Determine the index of a member in a sorted set, with scores ordered from high to low</td>
+</tr>
+<tr><td>ZSCORE</td>
+<td>key member</td>
+<td>Get the score associated with the given member in a sorted set</td>
+</tr>
+<tr><td>ZUNIONSTORE</td>
+<td>dst numkeys key [k...]
+[WEIGHTS weight [w...]]
+[AGGREGATE SUM|MIN|MAX]</td>
+<td>Add multiple sorted sets and store the resulting sorted set in a new key</td>
+</tr>
+</tbody>
+</table>
+<p>redis-py的一个例子:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#sorted set</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;ss_</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">i</span>
+        <span class="n">member</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s">*</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">i</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">zadd</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">member</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="s">&#39;sorted set: &#39;</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;ss_</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="n">i</span>
+    <span class="n">sizekey</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">zcard</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">scorekey</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">zcount</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sizekey</span><span class="p">)</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">zrange</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sizekey</span><span class="p">)</span>
+    <span class="n">ct_res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">ct</span><span class="p">:</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="n">ct_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">=</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span>
+    <span class="k">print</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;: &#39;</span><span class="p">,</span>  <span class="n">sizekey</span><span class="p">,</span> <span class="n">scorekey</span><span class="p">,</span> <span class="n">ct_res</span>
+<span class="k">print</span> <span class="s">&#39;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="hash">
+<h3>hash<a class="headerlink" href="#hash" title="Permalink to this headline">¶</a></h3>
+<p>redis hash 是哈希表的实现，类似于python dict。</p>
+<p>redis hash支持如下的命令，官方文档见：<a class="reference external" href="http://redis.io/commands#hash">http://redis.io/commands#hash</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="27%" />
+<col width="63%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>命令</td>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr><td>HDEL</td>
+<td>key field [field ...]</td>
+<td>Delete one or more hash fields</td>
+</tr>
+<tr><td>HEXISTS</td>
+<td>key field</td>
+<td>Determine if a hash field exists</td>
+</tr>
+<tr><td>HGET</td>
+<td>key field</td>
+<td>Get the value of a hash field</td>
+</tr>
+<tr><td>HGETALL</td>
+<td>key</td>
+<td>Get all the fields and values in a hash</td>
+</tr>
+<tr><td>HINCRBY</td>
+<td>key field increment</td>
+<td>Increment the integer value of a hash field by the given number</td>
+</tr>
+<tr><td>HKEYS</td>
+<td>key</td>
+<td>Get all the fields in a hash</td>
+</tr>
+<tr><td>HLEN</td>
+<td>key</td>
+<td>Get the number of fields in a hash</td>
+</tr>
+<tr><td>HMGET</td>
+<td>key field [field ...]</td>
+<td>Get the values of all the given hash fields</td>
+</tr>
+<tr><td>HMSET</td>
+<td>key field value [f-v...]</td>
+<td>Set multiple hash fields to multiple values</td>
+</tr>
+<tr><td>HSET</td>
+<td>key field value</td>
+<td>Set the string value of a hash field</td>
+</tr>
+<tr><td>HSETNX</td>
+<td>key field value</td>
+<td>Set the value of a hash field, only if the field does not exist</td>
+</tr>
+<tr><td>HVALS</td>
+<td>key</td>
+<td>Get all the values in a hash</td>
+</tr>
+</tbody>
+</table>
+<p>redis-py的一个例子如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;h_</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">j</span><span class="p">)</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">hset</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="s">&#39;h_9: &#39;</span>
+<span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">fields: 4&#39;</span>
+<span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">value: &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">hget</span><span class="p">(</span><span class="s">&#39;h_9&#39;</span><span class="p">,</span> <span class="s">&#39;4&#39;</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="s">&#39;h_8: &#39;</span>
+<span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">hashes: &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">hgetall</span><span class="p">(</span><span class="s">&#39;h_8&#39;</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="s">&#39;h_7: &#39;</span>
+<span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">fields: &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">hkeys</span><span class="p">(</span><span class="s">&#39;h_7&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">values: &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">hvals</span><span class="p">(</span><span class="s">&#39;h_7&#39;</span><span class="p">),</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+<div class="hierarhy">
+  <h3>导航</h3>
+  <ul>
+    <li><a href="../../index.html">WoW</a></li>
+
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="index.html" accesskey="U">redis</a></li> 
+  </ul>
+</div>
+
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">redis introduction</a><ul>
+<li><a class="reference internal" href="#redis">redis介绍</a></li>
+<li><a class="reference internal" href="#redis-keys">redis keys</a></li>
+<li><a class="reference internal" href="#redis-date-type">redis date type</a><ul>
+<li><a class="reference internal" href="#string">string</a></li>
+<li><a class="reference internal" href="#list">list</a></li>
+<li><a class="reference internal" href="#set">set</a></li>
+<li><a class="reference internal" href="#sorted-set">sorted set</a></li>
+<li><a class="reference internal" href="#hash">hash</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>上一篇</h3>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">redis</a></p>
+  <h3>下一篇</h3>
+  <p class="topless"><a href="../recommender/index.html"
+                        title="next chapter">推荐</a></p>
+
+<div id="aboutme" >
+  <h3>About me</h3>
+    <p class="aboutme" style="font-size: 14px">
+    
+    爱旅行，爱摄影，<br/>
+    也爱美食。<br/>
+    喜欢喝茶，<br/>
+    也喜欢有事没事独自发呆。<br/>
+    追寻万卷书中的深邃，<br/>
+    觅览万里路上的悠然，<br/>
+    也用文字记录生活的点点滴滴。<br/>
+    在行走与驻足之间，<br/>
+    我和你一样，<br/>
+    我是wgwang，<br/>
+    漂泊于美和丑的人间。<br/>
+    <br/>
+    爱搜索，爱开源，<br/>
+    爱各种新与旧技术, <br/>
+    更爱在自由的疆域驰骋。<br/>
+    享受Python的固执，<br/>
+    追逐C++的放任，<br/>
+    在充满是非的互联网里，<br/>
+    围观墙里墙外的折腾。<br/>
+    向往geek的执着，<br/>
+    我和你一样也不一样，<br/>
+    我是wgwang，<br/>
+    在平行宇宙中迷恋真实与虚幻。<br/>
+    
+    </p>
+</div>
+
+<div id="searchbox" style="display: none">
+  <h3>快速查找</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+
+    <div class="footer">
+        &copy; Copyright 2011, wgwang.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
