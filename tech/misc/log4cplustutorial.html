@@ -1,0 +1,349 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WoW! - World of Wgwang - log4cplus入门</title>
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="/usr/share/jsmath/"></script>
+    <link rel="top" title="WoW!" href="../../index.html" />
+    <link rel="up" title="未分类" href="index.html" />
+    <link rel="next" title="旅行: 万里路上的喜怒哀乐" href="../../travel/index.html" />
+    <link rel="prev" title="未分类" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+        <div id="searchbox">
+          <form class="search" action="../../search.html" method="get">
+            <input type="text" name="q" size="18" />
+            <input type="submit" value="搜索" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+        </div>
+        <script type="text/javascript">$('#searchbox').show(0);</script>
+        </li>
+        
+        <li><a href="../../index.html"> WoW!  </a> </li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../tech/index.html">技 术</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../travel/index.html">旅 行</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../note/index.html">随 笔</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../mm/index.html">影 音</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../poem/index.html">诗 词</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../work/index.html">工 作</a></li>
+      </ul>
+    </div>
+
+<div class="fixbodyheader">
+WoW! - The World of Wgwang!
+</div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="log4cplus">
+<span id="index-0"></span><h1>log4cplus入门<a class="headerlink" href="#log4cplus" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<p>2011-09-28 盛大搜索院</p>
+<div class="section" id="id1">
+<h2>介绍<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>log4cplus是log4j的c++移植版，是c++中一个很好的打印日志的库。它与另外一个c++的log库log4cxx相比较，好处是不依赖于libapr和libaprutil，可以静态链接到程序中，便于部署。</p>
+<p>当前的最新稳定版本是1.04，也是下面的例子中所用到的版本。</p>
+<p>从这个版本中所了解到的，log4cplus并未完全实现了log4j，不少细节部分都没有实现。但这并不妨碍我们使用它。</p>
+<p>下面是一些log4cplus资源：</p>
+<ul class="simple">
+<li>log4cplus project:
+<a class="reference external" href="http://log4cplus.sourceforge.net/index.html">http://log4cplus.sourceforge.net/index.html</a></li>
+<li>1.04版本下载:
+<a class="reference external" href="http://sourceforge.net/projects/log4cplus/files/log4cplus-stable/1.0.4/log4cplus-1.0.4.tar.bz2/download">http://sourceforge.net/projects/log4cplus/files/log4cplus-stable/1.0.4/log4cplus-1.0.4.tar.bz2/download</a></li>
+<li>log4cplus svn:
+svn co <a class="reference external" href="https://log4cplus.svn.sourceforge.net/svnroot/log4cplus">https://log4cplus.svn.sourceforge.net/svnroot/log4cplus</a> log4cplus</li>
+<li>log4cplus 官方文档：
+<a class="reference external" href="http://log4cplus.sourceforge.net/docs/html/index.html">http://log4cplus.sourceforge.net/docs/html/index.html</a></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>编译<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>log4cplus没有太复杂的依赖关系，编译器来很简单，一般情况下使用默认情况即可。有一点可以提一下，如果不想将编译好的库安装在默认路径下，可以在./configure的时候加入参数： &#8211;prefix=/the/path/you/want/to/install/the/log4cplus</p>
+</div>
+<div class="section" id="id3">
+<h2>实例<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h3>需求<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>以一个典型的需求（笔者的经历）简单实现一个例子。需求是这样的：</p>
+<ul class="simple">
+<li>用文件配置</li>
+<li>自动切割日志，按小时切割</li>
+<li>保留8天日志（更长时间的日志会转移到其他专门的日志服务器上）</li>
+<li>指定输出的日志格式（便于日志分析）</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h3>配置<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>下面是整理好的配置文件，命名为：log.properties，内容如下:</p>
+<div class="highlight-python"><pre>log4cplus.rootLogger=TRACE, R
+
+log4cplus.appender.R=log4cplus::DailyRollingFileAppender
+log4cplus.appender.R.File=./log/test.log
+log4cplus.appender.R.MaxBackupIndex=192 #8 * 24
+log4cplus.appender.R.Schedule=HOURLY
+log4cplus.appender.R.Append=true
+log4cplus.appender.R.layout=log4cplus::PatternLayout
+log4cplus.appender.R.layout.ConversionPattern=%p %D{%Y-%m-%d %H:%M:%S.%q} %i:%t %F:%L "%m"%n</pre>
+</div>
+</div>
+<div class="section" id="id6">
+<h3>程序<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>简单的示例程序如下:</p>
+<div class="highlight-python"><pre>#include &lt;cstdlib&gt;
+#include &lt;log4cplus/logger.h&gt;
+#include &lt;log4cplus/configurator.h&gt;
+#include &lt;log4cplus/helpers/loglog.h&gt;
+#include &lt;log4cplus/helpers/stringhelper.h&gt;
+
+using namespace std;
+using namespace log4cplus;
+using namespace log4cplus::helpers;
+
+int main()
+{
+
+    PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT("log.properties"));
+    Logger logger = Logger::getRoot();
+
+// trace
+    LOG4CPLUS_TRACE(logger, "trace and get the fingerprint: " &lt;&lt; "random integer: "&lt;&lt; random());
+
+// debug
+    LOG4CPLUS_DEBUG(logger, "this is debug log: " &lt;&lt; "random integer: "&lt;&lt; random());
+
+// info
+    LOG4CPLUS_INFO(logger, "the information centry...." &lt;&lt; "[ 1 + 1 = " &lt;&lt; 1 + 1 &lt;&lt; "]");
+
+// warn
+    LOG4CPLUS_WARN(logger, "Writing warning messages to log....");
+
+// error
+    LOG4CPLUS_ERROR(logger, "ooooooh, there is an error....");
+
+//fatal
+    LOG4CPLUS_FATAL(logger, "oh, my god! the fatal error occur!!!!!!!!!");
+
+    return 0;
+}</pre>
+</div>
+</div>
+<div class="section" id="id7">
+<h3>配置说明<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">文件配置</p>
+<p>log4cplus提供一个类【PropertyConfigurator】来实现从文件读取配置，参数就是文件名。其他参数采用默认。</p>
+</li>
+<li><p class="first">按时间切割日志，需要在配置文件中配置appender为【DailyRollingFileAppender】，对应的一个参数是文件名，可以用程序启动时的相对路径，不过绝对路径会更好。</p>
+</li>
+<li><p class="first">按小时切割日志，以及保留8天，体现在配置文件中为如下两个参数：</p>
+<ul class="simple">
+<li>log4cplus.appender.R.MaxBackupIndex=192 #8 * 24</li>
+<li>log4cplus.appender.R.Schedule=HOURLY</li>
+</ul>
+</li>
+<li><p class="first">最后，是一个用来配置日志输出格式的配置项，如下：</p>
+<ul class="simple">
+<li>log4cplus.appender.R.layout=log4cplus::PatternLayout</li>
+<li>log4cplus.appender.R.layout.ConversionPattern=%p %D{%Y-%m-%d %H:%M:%S.%q} %i:%t %F:%L &#8220;%m&#8221;%n</li>
+</ul>
+<p>日志格式的说明，见后面的附录资源。</p>
+</li>
+<li><p class="first">配置项的第一行【log4cplus.rootLogger=TRACE, R】会跟cpp代码一起来区别不同的logger和日志输出级别，分别说明如下：</p>
+<ul>
+<li><p class="first">选择logger</p>
+<p>Logger logger = Logger::getRoot(); 这个用来选择rootLogger的，其他的还可以配置更多的logger，一般情况下不是很需要。</p>
+</li>
+<li><p class="first">日志输出级别 TRACE</p>
+<p>这个可以控制日志输出，如在debug环境中，输出各种debug信息，而在线上环境中，则只需要输出info和各类错误信息。log4cplus支持如下日志级别，使用方法可以看cpp代码。</p>
+<ul class="simple">
+<li>TRACE</li>
+<li>DEBUG</li>
+<li>INFO</li>
+<li>WARN</li>
+<li>ERROR</li>
+<li>FATAL</li>
+</ul>
+<p>上述各种级别中，从上往下，重要性依次递增。而在配置文件中的级别会屏蔽掉比它重要性更低的日志输出。</p>
+</li>
+</ul>
+<ul class="simple">
+<li>日志文件名：当前版本不支持对后面日期格式的配置，日期格式是硬编码到程序中的。对于按小时切割日志格式的，文件为配置的文件名后附加“.yyyy-mm-dd-HH”。另外，在一个小时内多次启动程序，会在其后增加“.1”,“.2”……等，并不会append到同一个文件中，这点不是太好。</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id8">
+<h3>程序说明<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<p>使用方式见上述的示例代码即可。两点说明下：</p>
+<ul class="simple">
+<li>如【LOG4CPLUS_FATAL】这类的宏，可以重新用宏定义为自己熟悉的方式</li>
+<li>log4cplus的日志输出是用c++的stream的方式，用&lt;&lt;符号输出不同的字段。对于喜欢用c string format方式的话，需要在其上封装一层。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id9">
+<h2>附录<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="conversionpattern">
+<h3>ConversionPattern配置说明<a class="headerlink" href="#conversionpattern" title="Permalink to this headline">¶</a></h3>
+<p>见: <a class="reference external" href="http://log4cplus.sourceforge.net/docs/html/classlog4cplus_1_1PatternLayout.html">http://log4cplus.sourceforge.net/docs/html/classlog4cplus_1_1PatternLayout.html</a></p>
+</div>
+<div class="section" id="appender">
+<h3>其他appender<a class="headerlink" href="#appender" title="Permalink to this headline">¶</a></h3>
+<p>log4cplus还支持如下一些打印日志的方式（appender）：</p>
+<ul class="simple">
+<li>RollingFileAppender：按文件大小切分日志</li>
+<li>SocketAppender：把日志打印到网络socket中，适合实时日志分析等。另外应该支持将日志同时打印到本地文件和socket中，这样可以实现本地正常打印日志，网络来做实时统计等。</li>
+<li>ConsoleAppender： 打印日志到标准输出</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+            <br/>
+            <div align="center">&copy;&nbsp;版权所有 转载请注明<a href="http://wgwang.github.com/">来自于:&nbsp;WoW!</a>[wgwang.github.com]</div>
+            <div align="center">联系我:&nbsp;
+              <a href="mailto:wgwang@live.com">邮件</a>&nbsp;
+              <a href="http://weibo.com/wenguangwang">新浪微博</a>&nbsp; 
+              <a href="http://t.qq.com/wgwang">腾讯微博</a> &nbsp;
+              <a href="http://twitter.com/wgwang">twitter</a>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+<div class="hierarhy">
+  <h3>导航</h3>
+  <ul>
+    <li><a href="../../index.html">WoW!</a></li>
+
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="index.html" accesskey="U">未分类</a></li> 
+  </ul>
+</div>
+
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">log4cplus入门</a><ul>
+<li><a class="reference internal" href="#id1">介绍</a></li>
+<li><a class="reference internal" href="#id2">编译</a></li>
+<li><a class="reference internal" href="#id3">实例</a><ul>
+<li><a class="reference internal" href="#id4">需求</a></li>
+<li><a class="reference internal" href="#id5">配置</a></li>
+<li><a class="reference internal" href="#id6">程序</a></li>
+<li><a class="reference internal" href="#id7">配置说明</a></li>
+<li><a class="reference internal" href="#id8">程序说明</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id9">附录</a><ul>
+<li><a class="reference internal" href="#conversionpattern">ConversionPattern配置说明</a></li>
+<li><a class="reference internal" href="#appender">其他appender</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>上一篇</h3>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">未分类</a></p>
+  <h3>下一篇</h3>
+  <p class="topless"><a href="../../travel/index.html"
+                        title="next chapter">旅行: 万里路上的喜怒哀乐</a></p>
+
+<div id="aboutme" >
+  <h3>About me</h3>
+    <p class="aboutme" style="font-size: 14px">
+    
+    爱旅行，爱摄影，<br/>
+    也爱美食。<br/>
+    喜欢喝茶，<br/>
+    也喜欢有事没事独自发呆。<br/>
+    追寻万卷书中的深邃，<br/>
+    觅览万里路上的悠然，<br/>
+    也用文字记录生活的点点滴滴。<br/>
+    在行走与驻足之间，<br/>
+    我和你一样，<br/>
+    我是wgwang，<br/>
+    漂泊于美和丑的人间。<br/>
+    <br/>
+    爱搜索，爱开源，<br/>
+    爱各种新与旧技术, <br/>
+    更爱在自由的疆域驰骋。<br/>
+    享受Python的固执，<br/>
+    追逐C++的放任，<br/>
+    在充满是非的互联网里，<br/>
+    围观墙里墙外的折腾。<br/>
+    向往geek的执着，<br/>
+    我和你一样也不一样，<br/>
+    我是wgwang，<br/>
+    在平行宇宙中迷恋真实与虚幻。<br/>
+    
+    </p>
+</div>
+
+<div id="searchbox" style="display: none">
+  <h3>快速查找</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+
+    <div class="footer">
+        &copy; Copyright 2011, wgwang.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
