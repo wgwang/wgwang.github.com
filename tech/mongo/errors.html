@@ -22,7 +22,10 @@
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <script type="text/javascript" src="/usr/share/jsmath/"></script>
-    <link rel="top" title="WoW!" href="../../index.html" /> 
+    <link rel="top" title="WoW!" href="../../index.html" />
+    <link rel="up" title="mongodb" href="main.html" />
+    <link rel="next" title="redis" href="../redis/index.html" />
+    <link rel="prev" title="mongodb中与配置相关的错误信息" href="conf_err_list.html" /> 
   </head>
   <body>
     <div class="related">
@@ -73,8 +76,8 @@ WoW! - The World of Wgwang!
 </div>
 <div class="section" id="operationfailure">
 <h2>OperationFailure<a class="headerlink" href="#operationfailure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="cursor-id-number-not-valid-at-server">
-<h3>cursor id &#8216;{{ number }}&#8217; not valid at server<a class="headerlink" href="#cursor-id-number-not-valid-at-server" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="cursor-id-not-valid-at-server">
+<h3>cursor id not valid at server<a class="headerlink" href="#cursor-id-not-valid-at-server" title="Permalink to this headline">¶</a></h3>
 <p>在pymongo中遇到异常信息:</p>
 <div class="highlight-python"><pre>pymongo.errors.OperationFailure: cursor id '5119579678412392825' not valid at server</pre>
 </div>
@@ -83,6 +86,18 @@ WoW! - The World of Wgwang!
 </pre></div>
 </div>
 <p>这个错误信息虽然是由pymongo抛出异常导致的，但其原因在于cursor超时，故其他客户端也可能遇到这类情况。</p>
+</div>
+</div>
+<div class="section" id="pymongo">
+<h2>pymongo<a class="headerlink" href="#pymongo" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="typeerror">
+<h3>TypeError<a class="headerlink" href="#typeerror" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">TypeError: cannot save object of type &lt;type &#8216;list&#8217;&gt;</p>
+<p>pymongo.Collection中，save函数不能保存除了字典意外的其他类型数据。也就是，无法批量用save。</p>
+<p>出现问题的版本：2.0.1</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -106,7 +121,11 @@ WoW! - The World of Wgwang!
 <div class="hierarhy">
   <h3>导航</h3>
   <ul>
-    <li><a href="../../index.html">WoW!</a></li> 
+    <li><a href="../../index.html">WoW!</a></li>
+
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="main.html" accesskey="U">mongodb</a></li> 
   </ul>
 </div>
 
@@ -114,13 +133,23 @@ WoW! - The World of Wgwang!
   <ul>
 <li><a class="reference internal" href="#">mongodb错误信息及其解决办法</a><ul>
 <li><a class="reference internal" href="#operationfailure">OperationFailure</a><ul>
-<li><a class="reference internal" href="#cursor-id-number-not-valid-at-server">cursor id &#8216;{{ number }}&#8217; not valid at server</a></li>
+<li><a class="reference internal" href="#cursor-id-not-valid-at-server">cursor id not valid at server</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymongo">pymongo</a><ul>
+<li><a class="reference internal" href="#typeerror">TypeError</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 
+  <h3>上一篇</h3>
+  <p class="topless"><a href="conf_err_list.html"
+                        title="previous chapter">mongodb中与配置相关的错误信息</a></p>
+  <h3>下一篇</h3>
+  <p class="topless"><a href="../redis/index.html"
+                        title="next chapter">redis</a></p>
 
 <div id="aboutme" >
   <h3>About me</h3>
