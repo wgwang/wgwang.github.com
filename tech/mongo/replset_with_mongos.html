@@ -1,0 +1,319 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WoW! - World of Wgwang - 不分片的replset中使用mongos</title>
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="/usr/share/jsmath/"></script>
+    <link rel="top" title="WoW!" href="../../index.html" />
+    <link rel="up" title="mongodb" href="main.html" />
+    <link rel="next" title="mongodb的一些tips" href="tips.html" />
+    <link rel="prev" title="mongodb" href="main.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+        <div id="searchbox">
+          <form class="search" action="../../search.html" method="get">
+            <input type="text" name="q" size="18" />
+            <input type="submit" value="搜索" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+        </div>
+        <script type="text/javascript">$('#searchbox').show(0);</script>
+        </li>
+        
+        <li><a href="../../index.html"> WoW!  </a> </li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../tech/index.html">技 术</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../travel/index.html">旅 行</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../note/index.html">随 笔</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../mm/index.html">影 音</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../poem/index.html">诗 词</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../work/index.html">工 作</a></li>
+      </ul>
+    </div>
+
+<div class="fixbodyheader">
+WoW! - The World of Wgwang!
+</div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="replsetmongos">
+<span id="index-0"></span><h1>不分片的replset中使用mongos<a class="headerlink" href="#replsetmongos" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<p>2012-01-15 于 浦东张江</p>
+<div class="section" id="id1">
+<h2>为什么？<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>mongos一般情况下都是在做数据分片（sharding）时会使用到的，而如果数据没有做分片，通常可以直接利用mongo的各语言客户端来实现replset的链接（如mongo的c++客户端，pymongo，php mongo，都支持以replset的方式连接mongod）。一般情况下，特别是在测试，或者流量不大的时候，直接用mongo客户端连接mongod是绰绰有余的。</p>
+<p>不过，根据个人的使用经验，在生产环境中（production environment）使用mongodb的时候，强烈建议使用mongos，即使不做分片的时候。理由如下：</p>
+<ul>
+<li><p class="first">性能问考虑</p>
+<blockquote>
+<div><p>在使用mongodb的过程中发现，在高并发的环境中，用客户端直接连接replset，会导致mongod在一定并发数之后处理性能急剧下降，导致连接数超过最大值（mongodb最大支持的连接数是20k），从而拒绝服务。</p>
+<p>究其原因，是高并发的时候，会导致系统在处理网络连接的时间变长，从而导致分配给真正执行命令的时间变少，导致处理请求积压，从而引起雪崩。</p>
+</div></blockquote>
+</li>
+<li><p class="first">一致性</p>
+<blockquote>
+<div><p>在一个分片中使用mongos，当数据量变大需要做分片（sharding）的时候，不需要改变使用mongodb的客户端程序。</p>
+</div></blockquote>
+</li>
+<li><p class="first">灵活性</p>
+<blockquote>
+<div><p>在实际使用过程中，可能会有多个相同数据的集群切换（比如全量数据更新）。这样可以配置多个相同的mongos。在某一个时刻只有一个mongos连接线上集群，并对外提供服务。当需要切换集群的时候，可以按照如下方式配置mongos，并进行mongos切换，即可无缝的进行集群切换：</p>
+<ul class="simple">
+<li>mongos对外提供服务的配置跟线上的mongos完全一致</li>
+<li>mongos连接的mongod集群，由【当前提供在线服务的】改为【未来提供在线服务的】。</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>怎么做？<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>不分片的mongos连接mongod的replset，跟分片的时候是完全一样的配置方式，区别在于，只有一个分片。故，下面的方式是一个通用的方法。</p>
+<div class="section" id="configdb">
+<h3>configdb<a class="headerlink" href="#configdb" title="Permalink to this headline">¶</a></h3>
+<p>mongodb的config db保存的是sharding之后mongod的配置信息，包括分片的key，以及哪些数据落到哪些mongod上。不过config db只是保存配置信息，具体的分片路由是有mongos完成的。mongos会从config db中同步数据，并缓存这些数据。</p>
+<p>config db跟普通的mongod没啥区别，只是在启动mongod时，加上参数:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">--</span><span class="n">configsvr</span>
+</pre></div>
+</div>
+<p>并且要注意，不要用replset参数来启动configdb，configdb的数据同步是采用独立的、优化过的方式，跟普通的replset有所区别。官方介绍见: <a class="reference external" href="http://www.mongodb.org/display/DOCS/Configuring+Sharding">http://www.mongodb.org/display/DOCS/Configuring+Sharding</a></p>
+<p>建议部署三个configdb，最好分别部署在三台不同的服务器上。如果没有那么多服务器，1-2台亦可。</p>
+<p>典型的启动参数如下:</p>
+<div class="highlight-python"><pre>./mongod --configsvr --port  30000 --dbpath  /the/path/of/datafiles --logpath /the/path/of/log/file --logappend --fork</pre>
+</div>
+</div>
+<div class="section" id="replset">
+<h3>replset<a class="headerlink" href="#replset" title="Permalink to this headline">¶</a></h3>
+<p>普通的保存数据的mongod集群，以replset的方式提供服务。注意启动的时候加入参数:</p>
+<div class="highlight-python"><pre>--replSet setname/host1:port1,host2:port2,host3:port3</pre>
+</div>
+<p>其他参数按照普通的集群，一个例子如下:</p>
+<div class="highlight-python"><pre>./mongod --port 30001 --dbpath /the/path/of/datafiles --logpath /the/path/of/log/file --logappend --fork --replSet replset_name/host1:port1,host2:port2,host3:port3 --oplogSize 4000</pre>
+</div>
+<p>由于是用replset方式提供服务，如果是第一次配置replset集群，还需要进行初始化，在mongo客户端执行如下命令初始化:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">runCommand</span><span class="p">(</span>
+<span class="go">        {&#39;replSetInitiate&#39;:</span>
+<span class="go">                {&#39;_id&#39;: &#39;replset_name&#39;,</span>
+<span class="go">                &#39;members&#39;: [{&#39;_id&#39;:1, &#39;host&#39;:&#39;ip:port&#39;},{&#39;_id&#39;:2, &#39;host&#39;:&#39;ip:port&#39;},{&#39;_id&#39;:3, &#39;host&#39;:&#39;ip:port&#39;}]</span>
+<span class="go">        }</span>
+<span class="go">})</span>
+</pre></div>
+</div>
+<p>由于初始化replset需要分配oplog空间，可能需要等待一段时间。另外，oplog大小，根据写操作的频繁程度来确定，默认是dbpath所在的硬盘的5%。</p>
+</div>
+<div class="section" id="mongos">
+<h3>mongos<a class="headerlink" href="#mongos" title="Permalink to this headline">¶</a></h3>
+<p>mongos的启动，需要使用如下参数指定configdb:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">--</span><span class="n">configdb</span>
+</pre></div>
+</div>
+<p>一个例子如下:</p>
+<div class="highlight-python"><pre>./mongos --port 30003 --logpath /the/path/of/log/file --logappend --fork --configdb host1:port1,host2:port2,host3:port3</pre>
+</div>
+</div>
+<div class="section" id="configure">
+<h3>configure<a class="headerlink" href="#configure" title="Permalink to this headline">¶</a></h3>
+<p>用mongo客户端连接mongos，切换到admin数据库，然后执行如下命令，增加一个sharding:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">runCommand</span><span class="p">(</span> <span class="p">{</span> <span class="n">addshard</span> <span class="p">:</span> <span class="s">&quot;replset_name/host1:port1,host2:port2,host3:port3&quot;</span> <span class="p">}</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p>如果上述一切正常，那么配置完成。这是，运行如下命令，可以看到有一个shard:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">runCommand</span><span class="p">(</span> <span class="p">{</span> <span class="n">listshards</span> <span class="p">:</span> <span class="mi">1</span> <span class="p">}</span> <span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="misc">
+<h2>misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h2>
+<p>一些注意事项，想到的列举如下。</p>
+<ul>
+<li><p class="first">ip or hostname</p>
+<blockquote>
+<div><p>上述ip的地方建议使用hostname，这样如果需要做迁移，直接将对应的hostname指向新的ip即可（可以通过内网dns或者hosts文件的方式）。</p>
+</div></blockquote>
+</li>
+<li><p class="first">mongos的部署</p>
+<blockquote>
+<div><p>建议mongos部署多个，分别落在每一个需要连接mongodb集群的上游机器上。一个经常遇到的环境是，phpcgi中利用php mongo连接mongodb集群，这样建议在每一个phpcgi机器上都部署一到两个mongos，phpcgi连接本地的mongos，mongos连接保存数据的mongod。</p>
+</div></blockquote>
+</li>
+<li><p class="first">监控</p>
+<blockquote>
+<div><ul class="simple">
+<li>可以使用ganglia或者nagios等监控软件监控</li>
+<li>利用mongostat输出的数据进行自定义监控</li>
+<li>利用各种mongo客户端提供的获取mongodb集群状态的函数，自定义监控。</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>进一步阅读<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><dl class="first docutils">
+<dt>mongodb官方sharding相关文档:</dt>
+<dd><p class="first last"><a class="reference external" href="http://www.mongodb.org/display/DOCS/Sharding">http://www.mongodb.org/display/DOCS/Sharding</a></p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>mongodb官方replset相关文档:</dt>
+<dd><p class="first last"><a class="reference external" href="http://www.mongodb.org/display/DOCS/Replication">http://www.mongodb.org/display/DOCS/Replication</a></p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>一个完整的例子:</dt>
+<dd><p class="first last"><a class="reference external" href="http://cookbook.mongodb.org/operations/convert-replica-set-to-replicated-shard-cluster/">http://cookbook.mongodb.org/operations/convert-replica-set-to-replicated-shard-cluster/</a></p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+
+
+            <br/>
+            <div align="center">&copy;&nbsp;版权所有 转载请注明<a href="http://wgwang.github.com/">来自于:&nbsp;WoW!</a>[wgwang.github.com]</div>
+            <div align="center">联系我:&nbsp;
+              <a href="mailto:wgwang@live.com">邮件</a>&nbsp;
+              <a href="http://weibo.com/wenguangwang">新浪微博</a>&nbsp; 
+              <a href="http://t.qq.com/wgwang">腾讯微博</a> &nbsp;
+              <a href="http://twitter.com/wgwang">twitter</a>
+              <a href="http://www.facebook.com/pages/WOW/308589492517277">facebook</a>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+<div class="hierarhy">
+  <h3>导航</h3>
+  <ul>
+    <li><a href="../../index.html">WoW!</a></li>
+
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="main.html" accesskey="U">mongodb</a></li> 
+  </ul>
+</div>
+
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">不分片的replset中使用mongos</a><ul>
+<li><a class="reference internal" href="#id1">为什么？</a></li>
+<li><a class="reference internal" href="#id2">怎么做？</a><ul>
+<li><a class="reference internal" href="#configdb">configdb</a></li>
+<li><a class="reference internal" href="#replset">replset</a></li>
+<li><a class="reference internal" href="#mongos">mongos</a></li>
+<li><a class="reference internal" href="#configure">configure</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#misc">misc</a></li>
+<li><a class="reference internal" href="#id3">进一步阅读</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>上一篇</h3>
+  <p class="topless"><a href="main.html"
+                        title="previous chapter">mongodb</a></p>
+  <h3>下一篇</h3>
+  <p class="topless"><a href="tips.html"
+                        title="next chapter">mongodb的一些tips</a></p>
+
+<div id="aboutme" >
+  <h3>About me</h3>
+    <p class="aboutme" style="font-size: 14px">
+    
+    爱旅行，爱摄影，<br/>
+    也爱美食。<br/>
+    喜欢喝茶，<br/>
+    也可以狂狼笑谈疑惑孑然发呆。<br/>
+    追寻万卷书中的深邃，<br/>
+    觅览万里路上的悠然，<br/>
+    也用文字记录生活的点点滴滴。<br/>
+    在行走与驻足之间，<br/>
+    我和你一样，<br/>
+    我是wgwang，<br/>
+    漂泊于美和丑的人间。<br/>
+    <br/>
+    爱搜索，爱开源，<br/>
+    也爱观摩新科学与老技术, <br/>
+    更爱在自由的疆域驰骋。<br/>
+    享受Python的坦荡，<br/>
+    追逐C++的放任，<br/>
+    在充满是非的互联网里，<br/>
+    围观墙里墙外的折腾。<br/>
+    在幻想与真实之间，<br/>
+    我和你一样也不一样，<br/>
+    我是wgwang，<br/>
+    迷恋着巧与拙的智慧。<br/>
+    
+    </p>
+</div>
+
+<div id="searchbox" style="display: none">
+  <h3>快速查找</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+
+    <div class="footer">
+        &copy; Copyright 2011, wgwang.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
