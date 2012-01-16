@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>WoW! - World of Wgwang - mongodb</title>
+    <title>WoW! - World of Wgwang - 利用mongos实现数据库全量切换</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -23,9 +23,9 @@
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <script type="text/javascript" src="/usr/share/jsmath/"></script>
     <link rel="top" title="WoW!" href="../../index.html" />
-    <link rel="up" title="技术: 以人为本" href="../index.html" />
-    <link rel="next" title="利用mongos实现数据库全量切换" href="switch_db_via_mongos.html" />
-    <link rel="prev" title="技术: 以人为本" href="../index.html" /> 
+    <link rel="up" title="mongodb" href="main.html" />
+    <link rel="next" title="不分片的replset中使用mongos" href="replset_with_mongos.html" />
+    <link rel="prev" title="mongodb" href="main.html" /> 
   </head>
   <body>
     <div class="related">
@@ -68,18 +68,39 @@ WoW! - The World of Wgwang!
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="mongodb">
-<span id="index-0"></span><h1>mongodb<a class="headerlink" href="#mongodb" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="mongos">
+<span id="index-0"></span><h1>利用mongos实现数据库全量切换<a class="headerlink" href="#mongos" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="switch_db_via_mongos.html">利用mongos实现数据库全量切换</a></li>
-<li class="toctree-l1"><a class="reference internal" href="replset_with_mongos.html">不分片的replset中使用mongos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tips.html">mongodb的一些tips</a></li>
-<li class="toctree-l1"><a class="reference internal" href="right_parenthesis.html">一个右括号引发的血案</a></li>
-<li class="toctree-l1"><a class="reference internal" href="conf_err_list.html">mongodb中与配置相关的错误信息</a></li>
-<li class="toctree-l1"><a class="reference internal" href="errors.html">mongodb错误信息及其解决办法</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resources.html">mongodb资源索引</a></li>
+<ul class="simple">
 </ul>
+</div>
+<p>2012-01-15 于 浦东世纪公园</p>
+<div class="section" id="id1">
+<h2>场景<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>笔者在一个项目中使用了mongodb存储文档，数量为单机几亿文档数。在使用过程中，遇到的一个场景是：由于算法上的调整，每隔一段时间需要重新灌数据。而在灌数据的时候，需要保证不影响已有的数据。</p>
+<p>同时，数据不是静态的。文档在每时每刻都会不断的增加、更新和删除，这个过程不能中断，且需要保证切换后的数据库不会丢失文档。</p>
+</div>
+<div class="section" id="id2">
+<h2>问题<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>众所周知，mongodb对大量写操作并不友好。在大量写操作时，mongodb那个全局锁会导致读性能急剧下降。在更新大量的数据时，如果保证写的速度，毫无疑问，会导致很多读请求被挂住。</p>
+<p>解决这个问题的方法很多，一种方案是，单独用一个mongod来灌数据，灌完后将这数据的文件复制到线上，然后用脚本修改目录名，并重启mongodb。同时，在这个过程中暂停写入操作。</p>
+<p>当显然，上述过程会导致两方面问题:</p>
+<ul class="simple">
+<li>在复制数据的过程中导致io过于繁忙，从而会影响读服务。</li>
+<li>暂停写入操作需要将这个过程中的增加、更新和删除等写操作的数据保持起来</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>另一种思路<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>我们可以创建两个mongodb集群MA和MB。MA提供服务，包括增删改查。两个集群的示意图如下：</p>
+<img alt="../../images/switchdb.via.mongos3.jpg" class="align-center" src="../../images/switchdb.via.mongos3.jpg" />
+<p>在某个时刻更新算法，需要重灌数据的时候，启动MB集群，并且在此时（下称X）起，增删改操作同时写到MA和MB两个集群。写操作同时作用到MA和MB两个集群，有很多方式，AMQP协议提供了一种将一份数据分发给多个接收端的方案，开源实现有rabbitMQ，以及zeroMQ等。</p>
+<p>在X时刻之后，MB集群，一方面接收实时的增删改操作，另一方面开始接受灌库操作。直到灌库完成。这是，需要做的一件事是，将上图中蓝色的虚实线切换，具体来说是，停止MA的mongos，并启动MB的红色部分的mongos。这样，就平滑的完成了数据库的切换。</p>
+<p>需要说明的一点是，上述的8866的mongos可以分步在其他任何一个地方，跟在线服务没有关联；而8888的mongos，需要在任何客户端连接的地方分别部署两套（mongos程序可以是一个，但启动脚本需要两个，或者用不同的参数指定即可）</p>
+</div>
+<div class="section" id="id4">
+<h2>尾记<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>由于mongodb提供了mongos和mongod分别来实现路由和数据存储，根据实际使用场景，善用这两个分离的模块，可以起到一些很好的效果。</p>
 </div>
 </div>
 
@@ -105,16 +126,29 @@ WoW! - The World of Wgwang!
   <ul>
     <li><a href="../../index.html">WoW!</a></li>
 
-    <li> &raquo; &nbsp; <a href="../index.html" accesskey="U">技术: 以人为本</a></li> 
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="main.html" accesskey="U">mongodb</a></li> 
   </ul>
 </div>
 
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">利用mongos实现数据库全量切换</a><ul>
+<li><a class="reference internal" href="#id1">场景</a></li>
+<li><a class="reference internal" href="#id2">问题</a></li>
+<li><a class="reference internal" href="#id3">另一种思路</a></li>
+<li><a class="reference internal" href="#id4">尾记</a></li>
+</ul>
+</li>
+</ul>
+
   <h3>上一篇</h3>
-  <p class="topless"><a href="../index.html"
-                        title="previous chapter">技术: 以人为本</a></p>
+  <p class="topless"><a href="main.html"
+                        title="previous chapter">mongodb</a></p>
   <h3>下一篇</h3>
-  <p class="topless"><a href="switch_db_via_mongos.html"
-                        title="next chapter">利用mongos实现数据库全量切换</a></p>
+  <p class="topless"><a href="replset_with_mongos.html"
+                        title="next chapter">不分片的replset中使用mongos</a></p>
 
 <div id="aboutme" >
   <h3>About me</h3>
