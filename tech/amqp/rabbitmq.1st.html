@@ -1,0 +1,411 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WoW! - World of Wgwang - rabbitmq第一课</title>
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="/usr/share/jsmath/"></script>
+    <link rel="top" title="WoW!" href="../../index.html" />
+    <link rel="up" title="AMQP: Advanced Message Queuing Protocol" href="index.html" />
+    <link rel="next" title="推荐" href="../recommender/index.html" />
+    <link rel="prev" title="AMQP: Advanced Message Queuing Protocol" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+        <div id="searchbox">
+          <form class="search" action="../../search.html" method="get">
+            <input type="text" name="q" size="18" />
+            <input type="submit" value="搜索" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+        </div>
+        <script type="text/javascript">$('#searchbox').show(0);</script>
+        </li>
+        
+        <li><a href="../../index.html"> WoW!  </a> </li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../tech/index.html">技 术</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../travel/index.html">旅 行</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../note/index.html">随 笔</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../mm/index.html">影 音</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../poem/index.html">诗 词</a></li>
+        <li class="relatedmenudiv"></li>
+        <li><a href="../../work/index.html">工 作</a></li>
+      </ul>
+    </div>
+
+<div class="fixbodyheader">
+WoW! - The World of Wgwang!
+</div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="rabbitmq">
+<span id="index-0"></span><h1>rabbitmq第一课<a class="headerlink" href="#rabbitmq" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="id1">
+<h2>下载<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">erlang</p>
+<blockquote>
+<div><p>rabbitmq是用erlang开发的，编译和安装rabbitmq之前，必须先下载erlang安装包，下载地址如下：
+<a class="reference external" href="http://www.erlang.org/download.html">http://www.erlang.org/download.html</a></p>
+<p>笔者喜欢用源码编译安装，源码（R15B）下载地址：
+<a class="reference external" href="http://www.erlang.org/download/otp_src_R15B.tar.gz">http://www.erlang.org/download/otp_src_R15B.tar.gz</a></p>
+<p>windows的可执行文件（R15B）的下载地址：
+<a class="reference external" href="http://www.erlang.org/download/otp_win32_R15B.exe">http://www.erlang.org/download/otp_win32_R15B.exe</a></p>
+</div></blockquote>
+</li>
+<li><p class="first">rabbtimq</p>
+<blockquote>
+<div><p>rabbitmq的下载页面如下：
+<a class="reference external" href="http://www.rabbitmq.com/download.html">http://www.rabbitmq.com/download.html</a></p>
+<p>rabbitmq的源码（2.7.1）地址如下：
+<a class="reference external" href="http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server-2.7.1.tar.gz">http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server-2.7.1.tar.gz</a></p>
+<p>其他二进制版本（2.7.1）下载地址如下：
+exe/[windows]：
+<a class="reference external" href="http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server-2.7.1.exe">http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server-2.7.1.exe</a></p>
+<p>deb/[debian ubuntu]：
+<a class="reference external" href="http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server_2.7.1-1_all.deb">http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server_2.7.1-1_all.deb</a></p>
+<p>rpm/[fedora rhel centos]：
+<a class="reference external" href="http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server-2.7.1-1.noarch.rpm">http://www.rabbitmq.com/releases/rabbitmq-server/v2.7.1/rabbitmq-server-2.7.1-1.noarch.rpm</a></p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>安装<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">erlang</p>
+<blockquote>
+<div><p>linux下，按照如下方式源码安装，windows下建议下载exe直接双击文件安装:</p>
+<div class="highlight-python"><pre>tar zxvf otp_src_R15B.tar.gz
+cd otp_src_R15B
+./configure --prefix=/the/abs/path/to/install/erlang
+make
+make install</pre>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">rabbitmq</p>
+<blockquote>
+<div><p>rabbitmq源码安装有些麻烦，主要是要解决各种依赖。下面为了简便起见，不安装rabbitmq自带的docs（man），详细文档在互联网上更多（要学会善用google）。这样，步骤如下:</p>
+<ol class="arabic">
+<li><p class="first">把erlang的bin目录加入PATH中:</p>
+<div class="highlight-python"><pre>export PATH=$PATH:/the/abs/path/to/install/erlang/bin</pre>
+</div>
+</li>
+<li><p class="first">编辑makefile文件，在makefile的开头加入如下三行，用以指定安装rabbitmq的路径:</p>
+<div class="highlight-python"><pre>TARGET_DIR=/the/abs/path/to/install/rabbitmq
+SBIN_DIR=$(TARGET_DIR)/sbin
+MAN_DIR=$(TARGET_DIR)/man</pre>
+</div>
+</li>
+<li><p class="first">运行命令:</p>
+<div class="highlight-python"><pre>make install_bin</pre>
+</div>
+</li>
+</ol>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>配置<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>如果在安装时，不是安装在默认路径下，或者没有root权限，那么，需要编辑sbin下的启动脚本，以及进行合适的环境配置。参考文档见：
+<a class="reference external" href="http://www.rabbitmq.com/configure.html">http://www.rabbitmq.com/configure.html</a></p>
+<p>下面是笔者进行的简单配置：</p>
+<ol class="arabic">
+<li><p class="first">修改sbin目录下的rabbitmq-env文件，配置几个环境变量，如下:</p>
+<div class="highlight-python"><pre>RABBITMQ_BASE=${RABBITMQ_HOME}
+RABBITMQ_MNESIA_BASE=${RABBITMQ_HOME}/data/mnesia
+RABBITMQ_LOG_BASE=${RABBITMQ_HOME}/logs
+RABBITMQ_CONFIG_FILE=${RABBITMQ_HOME}/conf/rabbitmq.conf</pre>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><p>同时注释掉如下几行:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#if [ -f /etc/rabbitmq/rabbitmq.conf ] &amp;&amp; \</span>
+<span class="c">#   [ ! -f /etc/rabbitmq/rabbitmq-env.conf ] ; then</span>
+<span class="c">#    echo -n &quot;WARNING: ignoring /etc/rabbitmq/rabbitmq.conf -- &quot;</span>
+<span class="c">#    echo &quot;location has moved to /etc/rabbitmq/rabbitmq-env.conf&quot;</span>
+<span class="c">#fi</span>
+<span class="c">#[ -f /etc/rabbitmq/rabbitmq-env.conf ] &amp;&amp; . /etc/rabbitmq/rabbitmq-env.conf</span>
+</pre></div>
+</div>
+<p>环境变量参考:
+<a class="reference external" href="http://www.rabbitmq.com/configure.html#define-environment-variables">http://www.rabbitmq.com/configure.html#define-environment-variables</a></p>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p class="first">在${RABBITMQ_HOME}目录下创建几个目录，${RABBITMQ_HOME}目录为sbin上一层目录:</p>
+<div class="highlight-python"><pre>mkdir -p conf logs data/mnesia</pre>
+</div>
+</li>
+<li><dl class="first docutils">
+<dt>在${RABBITMQ_HOME}/conf/rabbitmq.conf对rabbitmq进行配置</dt>
+<dd><p class="first last">配置项参考:
+<a class="reference external" href="http://www.rabbitmq.com/configure.html#configuration-file">http://www.rabbitmq.com/configure.html#configuration-file</a></p>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<div class="section" id="id4">
+<h2>运行<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>运行rabbitmq，需要erlang的虚拟机。如果erl没有在系统的PATH中，需要把它加入到PATH中，命令如下:</p>
+<div class="highlight-python"><pre>export PATH=$PATH:/the/abs/path/of/erl</pre>
+</div>
+<p>运行如下命令启动rabbitmq:</p>
+<div class="highlight-python"><pre>./sbin/rabbitmq-server</pre>
+</div>
+<p>如果console上出现“broker running”，运行成功。ctrl-c选择a可以推出。</p>
+<p>如果要后台运行，使用参数-detached，命令如下:</p>
+<div class="highlight-python"><pre>./sbin/rabbitmq-server -detached</pre>
+</div>
+<p>需要退出时，kill rabbitmq的pid即可。</p>
+</div>
+<div class="section" id="id5">
+<h2>测试<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>如何使用rabbitmq，可以参考官网提供的tutorial：
+<a class="reference external" href="http://www.rabbitmq.com/getstarted.html">http://www.rabbitmq.com/getstarted.html</a></p>
+<p>下面是笔者的测试，使用python语言。</p>
+<ol class="arabic">
+<li><p class="first">下载安装pika:</p>
+<blockquote>
+<div><p>pika首页： <a class="reference external" href="http://pika.github.com/">http://pika.github.com/</a>
+下载安装pika指南见： <a class="reference external" href="http://pika.github.com/#installing-pika">http://pika.github.com/#installing-pika</a></p>
+</div></blockquote>
+</li>
+<li><p class="first">发送消息</p>
+<blockquote>
+<div><p>利用pika往rabbitmq发送消息，程序如下，点击<a class="reference external" href="https://github.com/wgwang/code.of.blog/blob/master/rabbitmq/1st/send.py">send.py</a>下载</p>
+</div></blockquote>
+</li>
+</ol>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">pika</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">BlockingConnection</span><span class="p">(</span>
+            <span class="n">pika</span><span class="o">.</span><span class="n">ConnectionParameters</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">5672</span><span class="p">))</span>
+    <span class="n">channel</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">channel</span><span class="p">()</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">queue_declare</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="s">&#39;wgwang.github.com&#39;</span><span class="p">)</span>
+    <span class="n">channel</span><span class="o">.</span><span class="n">basic_publish</span><span class="p">(</span><span class="n">exchange</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+            <span class="n">routing_key</span><span class="o">=</span><span class="s">&#39;wgwang.github.com&#39;</span><span class="p">,</span>
+            <span class="n">body</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&#39;send msg: &#39;</span><span class="p">,</span> <span class="n">msg</span>
+    <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;hi </span><span class="si">%d</span><span class="s">, welcome to WoW!&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+    <span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic" start="3">
+<li><p class="first">接收消息</p>
+<blockquote>
+<div><p>利用pika从rabbitmq中接收消息的程序如下，点击<a class="reference external" href="https://github.com/wgwang/code.of.blog/blob/master/rabbitmq/1st/receive.py">receive.py</a>下载:</p>
+</div></blockquote>
+</li>
+</ol>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">pika</span>
+
+<span class="k">def</span> <span class="nf">process_msg</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
+    <span class="k">print</span> <span class="s">&#39;receive msg: &#39;</span><span class="p">,</span> <span class="n">body</span>
+
+<span class="n">connection</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">BlockingConnection</span><span class="p">(</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">ConnectionParameters</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">5672</span><span class="p">))</span>
+<span class="n">channel</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">channel</span><span class="p">()</span>
+<span class="n">channel</span><span class="o">.</span><span class="n">queue_declare</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="s">&#39;wgwang.github.com&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&#39;receiver: waiting msg...&#39;</span>
+
+<span class="n">channel</span><span class="o">.</span><span class="n">basic_consume</span><span class="p">(</span><span class="n">process_msg</span><span class="p">,</span>
+        <span class="n">queue</span><span class="o">=</span><span class="s">&#39;wgwang.github.com&#39;</span><span class="p">,</span>
+        <span class="n">no_ack</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">channel</span><span class="o">.</span><span class="n">start_consuming</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic" start="4">
+<li><p class="first">运行</p>
+<blockquote>
+<div><p>将上述程序保存为文件，分别为send.py和receive.py，用python运行，即可看到，send发送的消息被receive接收到了</p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="id6">
+<h2>结语<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<p>本文简单的以例子的方式介绍了rabbitmq的安装和运行，并用python实现了一个简单的发送消息到接收消息的例子，用以测试运行中的rabbitmq。</p>
+</div>
+</div>
+
+
+            <br/>
+            <div align="center">&copy;&nbsp;版权所有 转载请注明<a href="http://wgwang.github.com/">来自于:&nbsp;WoW!</a>[wgwang.github.com]</div>
+            <div align="center">联系我:&nbsp;
+              <a href="mailto:wgwang@live.com">邮件</a>&nbsp;
+              <a href="http://weibo.com/wenguangwang">新浪微博</a>&nbsp; 
+              <a href="http://t.qq.com/wgwang">腾讯微博</a> &nbsp;
+              <a href="http://twitter.com/wgwang">twitter</a>
+              <a href="http://www.facebook.com/pages/WOW/308589492517277">facebook</a>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+<div class="hierarhy">
+  <h3>导航</h3>
+  <ul>
+    <li><a href="../../index.html">WoW!</a></li>
+
+    <li> &raquo; &nbsp; <a href="../index.html" >技术: 以人为本</a></li>
+
+    <li> &raquo; &raquo; &nbsp; <a href="index.html" accesskey="U">AMQP: Advanced Message Queuing Protocol</a></li> 
+  </ul>
+</div>
+
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">rabbitmq第一课</a><ul>
+<li><a class="reference internal" href="#id1">下载</a></li>
+<li><a class="reference internal" href="#id2">安装</a></li>
+<li><a class="reference internal" href="#id3">配置</a></li>
+<li><a class="reference internal" href="#id4">运行</a></li>
+<li><a class="reference internal" href="#id5">测试</a></li>
+<li><a class="reference internal" href="#id6">结语</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>上一篇</h3>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">AMQP: Advanced Message Queuing Protocol</a></p>
+  <h3>下一篇</h3>
+  <p class="topless"><a href="../recommender/index.html"
+                        title="next chapter">推荐</a></p>
+
+<div id="aboutme" >
+  <h3>About me</h3>
+    <p class="aboutme" style="font-size: 14px">
+    
+    爱旅行，爱摄影，<br/>
+    也爱美食。<br/>
+    喜欢喝茶，<br/>
+    也可以狂狼笑谈亦或孑然发呆。<br/>
+    追寻万卷书中的深邃，<br/>
+    觅览万里路上的悠然，<br/>
+    也用文字记录生活的点点滴滴。<br/>
+    在行走与驻足之间，<br/>
+    我和你一样，<br/>
+    我是wgwang，<br/>
+    漂泊于美和丑的人间。<br/>
+    <br/>
+    爱搜索，爱开源，<br/>
+    也爱观摩新科学与老技术, <br/>
+    更爱在自由的疆域驰骋。<br/>
+    享受Python的坦荡，<br/>
+    追逐C++的放任，<br/>
+    在充满是非的互联网里，<br/>
+    围观墙里墙外的折腾。<br/>
+    在幻想与真实之间，<br/>
+    我和你一样也不一样，<br/>
+    我是wgwang，<br/>
+    迷恋着巧与拙的智慧。<br/>
+    
+    </p>
+</div>
+
+<div id="searchbox" style="display: none">
+  <h3>快速查找</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+
+    <div class="footer">
+        &copy; Copyright 2011, wgwang.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
