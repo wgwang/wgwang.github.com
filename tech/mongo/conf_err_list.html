@@ -74,6 +74,19 @@ WoW! - The World of Wgwang!
 <ul class="simple">
 </ul>
 </div>
+<div class="section" id="mongos-configdb">
+<h2>mongos configdb顺序不一致引发的问题<a class="headerlink" href="#mongos-configdb" title="Permalink to this headline">¶</a></h2>
+<p>在做mongodb cluster的时候，遇到如下错误:</p>
+<div class="highlight-python"><pre>mongos&gt; db.printShardingStatus()
+Tue Mar 20 13:04:12 uncaught exception: error {
+    "$err" : "could not initialize sharding on connection replset/10.10.24.101:27021,10.10.24.102:27022 :: caused by :: specified a different configdb!",
+    "code" : 15907
+}</pre>
+</div>
+<p>经检查，所有的配置以及服务都正常，并且已经有mongos能够正常提供服务，包括插入（insert），更新（update），查询（query）等，在该正常的mongos上执行各种find、count等语句都正常。</p>
+<p>经过google，发现原来是mongos连接configdb的参数配置跟已有的mongos的配置不完全一样，不一样的地方在于三个configdb的顺序。将顺序改回来后，一切正常！</p>
+<p>参考: <a class="reference external" href="http://comments.gmane.org/gmane.comp.db.mongodb.user/9798">http://comments.gmane.org/gmane.comp.db.mongodb.user/9798</a></p>
+</div>
 </div>
 
 
@@ -103,6 +116,14 @@ WoW! - The World of Wgwang!
     <li> &raquo; &raquo; &nbsp; <a href="main.html" accesskey="U">mongodb</a></li> 
   </ul>
 </div>
+
+  <h3>索引</h3>
+  <ul>
+<li><a class="reference internal" href="#">mongodb中与配置相关的错误信息</a><ul>
+<li><a class="reference internal" href="#mongos-configdb">mongos configdb顺序不一致引发的问题</a></li>
+</ul>
+</li>
+</ul>
 
   <h3>上一篇</h3>
   <p class="topless"><a href="right_parenthesis.html"
