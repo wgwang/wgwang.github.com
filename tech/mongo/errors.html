@@ -94,10 +94,49 @@ WoW! - The World of Wgwang!
 <h3>TypeError<a class="headerlink" href="#typeerror" title="Permalink to this headline">¶</a></h3>
 <ul>
 <li><p class="first">TypeError: cannot save object of type &lt;type &#8216;list&#8217;&gt;</p>
-<p>pymongo.Collection中，save函数不能保存除了字典意外的其他类型数据。也就是，无法批量用save。</p>
+<p>pymongo.Collection中，save函数不能保存除了字典以外的其他类型数据。也就是，无法批量用save。</p>
 <p>出现问题的版本：2.0.1</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="section" id="mongos">
+<h2>mongos异常退出<a class="headerlink" href="#mongos" title="Permalink to this headline">¶</a></h2>
+<p>遇到过好几次mongos异常退出，google了多次，包括升级到最新的2.0.4版本之后，该问题一直存在，表现出来的是，当压力增大之后，会在某个时刻退出，日志中典型的错误如下:</p>
+<div class="highlight-python"><pre>Tue Mar 20 19:41:30 [conn109398] ERROR: Uncaught std::exception: boost::thread_resource_error, terminating
+Tue Mar 20 19:41:30 [conn109398] dbexit:  rc:100
+Logstream::get called in uninitialized state
+Tue Mar 20 19:41:30 [mongosMain] dbexit:  rc:0
+Received signal 11
+Backtrace: 0x54d9c5 0x7f826dcb8900 0x7f826dcbbce5 0x7c22a9 0x7c480d 0x7c4f67 0x7f826dca4cdd 0x4b1fd9
+/home/worker/mongodb/bin/mongos(_ZN5mongo17printStackAndExitEi+0x75)[0x54d9c5]
+/lib64/libc.so.6(+0x32900)[0x7f826dcb8900]
+/lib64/libc.so.6(exit+0x35)[0x7f826dcbbce5]
+/home/worker/mongodb/bin/mongos[0x7c22a9]
+/home/worker/mongodb/bin/mongos(_Z5_mainiPPc+0x232d)[0x7c480d]
+/home/worker/mongodb/bin/mongos(main+0x27)[0x7c4f67]
+/lib64/libc.so.6(__libc_start_main+0xfd)[0x7f826dca4cdd]
+/home/worker/mongodb/bin/mongos(_ZNSt15basic_streambufIcSt11char_traitsIcEE6xsputnEPKcl+0x69)[0x4b1fd9]
+===</pre>
+</div>
+<p>经过艰难困苦的跟进，最终发现这个问题是由于操作系统的ulimit -u这个参数限制导致的。当一个用户所启动的进程/线程数超过这个值的时候，会导致无法创建新的线程/进程。而在mongodb中， 每当有一个新的请求，会fork一个线程（进程）来处理，而达到这个限制之后，会出现无法fork的情况，从而出错。</p>
+<p>解决这个问题的方法很简单，就是将ulimit -u这个参数调大。另外，当出现一些无法理解的问题时，可以检查下ulimit -a，看看里面的各种参数是否有太小的情况出现。下面是我们在使用中的一个ulimit的参数情况，供参考:</p>
+<div class="highlight-python"><pre>core file size          (blocks, -c) unlimited
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 256997
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 40960
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) 8192
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 250000
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited</pre>
 </div>
 </div>
 </div>
@@ -141,6 +180,7 @@ WoW! - The World of Wgwang!
 <li><a class="reference internal" href="#typeerror">TypeError</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#mongos">mongos异常退出</a></li>
 </ul>
 </li>
 </ul>
@@ -204,7 +244,7 @@ WoW! - The World of Wgwang!
 
     <div class="footer">
         &copy; Copyright 2011, wgwang.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

@@ -93,7 +93,7 @@ WoW! - The World of Wgwang!
 <div class="section" id="id3">
 <h2>另一种思路<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>我们可以创建两个mongodb集群MA和MB。MA提供服务，包括增删改查。两个集群的示意图如下：</p>
-<img alt="../../images/switchdb.via.mongos3.jpg" class="align-center" src="../../images/switchdb.via.mongos3.jpg" />
+<img alt="../../images/switchdb.via.mongos.jpg" class="align-center" src="../../images/switchdb.via.mongos.jpg" />
 <p>在某个时刻更新算法，需要重灌数据的时候，启动MB集群，并且在此时（下称X）起，增删改操作同时写到MA和MB两个集群。写操作同时作用到MA和MB两个集群，有很多方式，AMQP协议提供了一种将一份数据分发给多个接收端的方案，开源实现有rabbitMQ，以及zeroMQ等。</p>
 <p>在X时刻之后，MB集群，一方面接收实时的增删改操作，另一方面开始接受灌库操作。直到灌库完成。这是，需要做的一件事是，将上图中蓝色的虚实线切换，具体来说是，停止MA的mongos，并启动MB的红色部分的mongos。这样，就平滑的完成了数据库的切换。</p>
 <p>需要说明的一点是，上述的8866的mongos可以分步在其他任何一个地方，跟在线服务没有关联；而8888的mongos，需要在任何客户端连接的地方分别部署两套（mongos程序可以是一个，但启动脚本需要两个，或者用不同的参数指定即可）</p>
@@ -202,7 +202,7 @@ WoW! - The World of Wgwang!
 
     <div class="footer">
         &copy; Copyright 2011, wgwang.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
